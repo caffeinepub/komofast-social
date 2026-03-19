@@ -1,0 +1,185 @@
+import {
+  type ReactNode,
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import type { UserProfile, UserRole } from "../backend.d";
+import { useActor } from "../hooks/useActor";
+
+interface AppContextValue {
+  currentUser: UserProfile | null;
+  setCurrentUser: (u: UserProfile | null) => void;
+  userRole: UserRole | null;
+  isAdmin: boolean;
+  cartCount: number;
+  setCartCount: (n: number | ((prev: number) => number)) => void;
+  unreadNotifs: number;
+  setUnreadNotifs: (n: number | ((prev: number) => number)) => void;
+  navigate: (to: string, params?: Record<string, string>) => void;
+  currentPath: string;
+  currentParams: Record<string, string>;
+  createPostOpen: boolean;
+  setCreatePostOpen: (v: boolean) => void;
+  createStoryOpen: boolean;
+  setCreateStoryOpen: (v: boolean) => void;
+  createPostInitialType: "post" | "reel";
+  cameraReelOpen: boolean;
+  setCameraReelOpen: (v: boolean) => void;
+  setCreatePostInitialType: (v: "post" | "reel") => void;
+  isLoggedIn: boolean;
+  login: (phone: string) => void;
+  logout: () => void;
+}
+
+const AppContext = createContext<AppContextValue | null>(null);
+
+export function AppProvider({ children }: { children: ReactNode }) {
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+  const [unreadNotifs, setUnreadNotifs] = useState(3);
+  const [createPostOpen, setCreatePostOpen] = useState(false);
+  const [createStoryOpen, setCreateStoryOpen] = useState(false);
+  const [cameraReelOpen, setCameraReelOpen] = useState(false);
+  const [createPostInitialType, setCreatePostInitialType] = useState<
+    "post" | "reel"
+  >("post");
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const [currentParams, setCurrentParams] = useState<Record<string, string>>(
+    {},
+  );
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return localStorage.getItem("komo_logged_in") === "true";
+  });
+  const [mockPhone, setMockPhone] = useState(() => {
+    return localStorage.getItem("komo_phone") || "";
+  });
+
+  const { actor, isFetching } = useActor();
+
+  // Force dark mode
+  useEffect(() => {
+    document.documentElement.classList.add("dark");
+  }, []);
+
+  // Listen for popstate
+  useEffect(() => {
+    const handler = () => {
+      setCurrentPath(window.location.pathname);
+      const url = new URL(window.location.href);
+      const params: Record<string, string> = {};
+      url.searchParams.forEach((v, k) => {
+        params[k] = v;
+      });
+      setCurrentParams(params);
+    };
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, []);
+
+  // Load user profile
+  useEffect(() => {
+    if (!actor || isFetching) return;
+    Promise.all([
+      actor.getCallerUserProfile(),
+      actor.isCallerAdmin(),
+      actor.getCallerUserRole(),
+      actor.getUnreadNotificationCount(),
+      actor.getCart(),
+    ])
+      .then(([profile, adminStatus, role, notifCount, cart]) => {
+        setCurrentUser(profile);
+        setIsAdmin(adminStatus);
+        setUserRole(role);
+        setUnreadNotifs(Number(notifCount));
+        setCartCount(cart.length);
+      })
+      .catch(() => {});
+  }, [actor, isFetching]);
+
+  // Set mock user when logged in via phone
+  useEffect(() => {
+    if (isLoggedIn && mockPhone && !currentUser) {
+      const username = mockPhone.replace("+91", "");
+      setCurrentUser({
+        id: "mock_user",
+        username: `user_${username.slice(-4)}`,
+        displayName: `User ${username.slice(-4)}`,
+        bio: "New to Komofast Social!",
+        isCreator: false,
+        profilePicture: [],
+        followerCount: BigInt(0),
+        followingCount: BigInt(0),
+        postCount: BigInt(0),
+        createdAt: BigInt(Date.now()),
+      } as any);
+    }
+  }, [isLoggedIn, mockPhone, currentUser]);
+
+  const login = (phone: string) => {
+    localStorage.setItem("komo_logged_in", "true");
+    localStorage.setItem("komo_phone", phone);
+    setMockPhone(phone);
+    setIsLoggedIn(true);
+  };
+
+  const logout = () => {
+    localStorage.removeItem("komo_logged_in");
+    localStorage.removeItem("komo_phone");
+    setIsLoggedIn(false);
+    setMockPhone("");
+    setCurrentUser(null);
+  };
+
+  const navigate = (to: string, params?: Record<string, string>) => {
+    let url = to;
+    if (params && Object.keys(params).length > 0) {
+      const searchParams = new URLSearchParams(params);
+      url = `${to}?${searchParams.toString()}`;
+    }
+    window.history.pushState({}, "", url);
+    setCurrentPath(to);
+    setCurrentParams(params || {});
+    window.scrollTo(0, 0);
+  };
+
+  return (
+    <AppContext.Provider
+      value={{
+        currentUser,
+        setCurrentUser,
+        userRole,
+        isAdmin,
+        cartCount,
+        setCartCount,
+        unreadNotifs,
+        setUnreadNotifs,
+        navigate,
+        currentPath,
+        currentParams,
+        createPostOpen,
+        setCreatePostOpen,
+        createStoryOpen,
+        setCreateStoryOpen,
+        createPostInitialType,
+        setCreatePostInitialType,
+        cameraReelOpen,
+        setCameraReelOpen,
+        isLoggedIn,
+        login,
+        logout,
+      }}
+    >
+      {children}
+    </AppContext.Provider>
+  );
+}
+
+export function useApp() {
+  const ctx = useContext(AppContext);
+  if (!ctx) throw new Error("useApp must be used within AppProvider");
+  return ctx;
+}
