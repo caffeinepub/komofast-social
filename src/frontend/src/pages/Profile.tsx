@@ -1,17 +1,27 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Bookmark,
+  Flame,
   Grid,
+  Heart,
+  Lock,
   LogOut,
+  Play,
   Settings,
+  Share2,
+  ShoppingBag,
   Star,
   TrendingUp,
+  Trophy,
   UserMinus,
   UserPlus,
+  Users,
   Zap,
 } from "lucide-react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import PostDetailModal from "../components/modals/PostDetailModal";
@@ -33,10 +43,69 @@ const PROFILE_MOCK = {
   initials: "KU",
 };
 
+const HONOR_POINTS = 4250;
+
+const TIERS = [
+  { name: "Bronze", min: 0, max: 999, color: "#CD7F32", emoji: "🥉" },
+  { name: "Silver", min: 1000, max: 4999, color: "#C0C0C0", emoji: "🥈" },
+  { name: "Gold", min: 5000, max: 14999, color: "#FFD700", emoji: "🥇" },
+  {
+    name: "Platinum",
+    min: 15000,
+    max: Number.POSITIVE_INFINITY,
+    color: "#E5E4E2",
+    emoji: "💎",
+  },
+];
+
+const ACTIVITY_STATS = [
+  { label: "Login Streak", value: "7 days", icon: Flame, color: "#FF6B35" },
+  { label: "Reels Watched", value: "142", icon: Play, color: "#2FA8FF" },
+  { label: "Likes Given", value: "89", icon: Heart, color: "#FF4B8B" },
+  { label: "Posts Shared", value: "23", icon: Share2, color: "#A855F7" },
+  { label: "Referrals", value: "3", icon: Users, color: "#22C55E" },
+  { label: "Purchases", value: "2", icon: ShoppingBag, color: "#F59E0B" },
+];
+
+const EARNING_HISTORY = [
+  { activity: "Daily Login", points: 10, time: "Today", icon: Flame },
+  { activity: "Watched 5 Reels", points: 25, time: "Today", icon: Play },
+  { activity: "Liked 10 Posts", points: 10, time: "Yesterday", icon: Heart },
+  {
+    activity: "Referred a Friend",
+    points: 200,
+    time: "3 days ago",
+    icon: Users,
+  },
+  {
+    activity: "Made a Purchase",
+    points: 150,
+    time: "1 week ago",
+    icon: ShoppingBag,
+  },
+];
+
+const REWARDS = [
+  { name: "10% Marketplace Discount", cost: 500, emoji: "🛒" },
+  { name: "Exclusive Gold Badge", cost: 1000, emoji: "🏅" },
+  { name: "Creator Boost", cost: 2000, emoji: "🚀" },
+  { name: "Free Subscription", cost: 3000, emoji: "⭐" },
+];
+
 function formatNum(n: number): string {
   if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
   if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
   return String(n);
+}
+
+function getTierInfo(pts: number) {
+  const current = TIERS.findLast((t) => pts >= t.min) ?? TIERS[0];
+  const nextIndex = TIERS.indexOf(current) + 1;
+  const next = TIERS[nextIndex] ?? null;
+  const progress = next
+    ? Math.round(((pts - current.min) / (next.min - current.min)) * 100)
+    : 100;
+  return { current, next, progress };
 }
 
 export default function Profile() {
@@ -44,7 +113,9 @@ export default function Profile() {
   const isOwnProfile = !currentPath.includes("userId");
   const [following, setFollowing] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
-  const [activeTab, setActiveTab] = useState<"posts" | "saved">("posts");
+  const [activeTab, setActiveTab] = useState<"posts" | "saved" | "earning">(
+    "posts",
+  );
   const [selectedPost, setSelectedPost] = useState<
     (typeof MOCK_POSTS)[0] | null
   >(null);
@@ -64,9 +135,15 @@ export default function Profile() {
     toast.success("Logged out successfully");
   };
 
+  const {
+    current: tier,
+    next: nextTier,
+    progress: tierProgress,
+  } = getTierInfo(HONOR_POINTS);
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-4">
-      {/* Cover / gradient header */}
+      {/* Cover */}
       <div
         className="h-32 rounded-2xl mb-0 -mb-8 relative"
         style={{
@@ -99,7 +176,6 @@ export default function Profile() {
 
       {/* Avatar + info */}
       <div className="komo-surface rounded-2xl komo-card-shadow p-4 pt-12 relative">
-        {/* Avatar */}
         <div
           className="absolute -top-10 left-4 w-20 h-20 rounded-full flex items-center justify-center text-[24px] font-bold text-white border-4 border-[#1A1F26]"
           style={{ background: profile.gradient }}
@@ -192,13 +268,12 @@ export default function Profile() {
           )}
         </div>
 
-        {/* Bio */}
         <p className="text-[13px] text-komo-text-secondary mt-3 leading-relaxed">
           {profile.bio}
         </p>
 
         {/* Stats row */}
-        <div className="flex gap-5 mt-4">
+        <div className="flex gap-5 mt-4 flex-wrap">
           <div className="text-center">
             <p className="text-[16px] font-bold text-foreground">
               {formatNum(profile.posts)}
@@ -225,9 +300,15 @@ export default function Profile() {
               <p className="text-[11px] text-komo-text-muted">Subscribers</p>
             </div>
           )}
+          <div className="text-center">
+            <p className="text-[16px] font-bold komo-gradient-text">
+              {formatNum(HONOR_POINTS)}
+            </p>
+            <p className="text-[11px] text-komo-text-muted">Honor Pts</p>
+          </div>
         </div>
 
-        {/* Creator earnings (own profile only) */}
+        {/* Creator earnings */}
         {isOwnProfile && profile.isCreator && (
           <div
             className="mt-4 p-3 rounded-xl flex items-center gap-3"
@@ -287,38 +368,272 @@ export default function Profile() {
         >
           <Bookmark size={15} /> Saved
         </button>
+        <button
+          type="button"
+          data-ocid="profile.earning.tab"
+          onClick={() => setActiveTab("earning")}
+          className={`flex items-center gap-2 px-5 py-3 text-[13px] font-semibold border-b-2 transition-colors ${
+            activeTab === "earning"
+              ? "border-komo-blue text-komo-blue"
+              : "border-transparent text-komo-text-muted hover:text-foreground"
+          }`}
+        >
+          <Trophy size={15} /> Earning
+        </button>
       </div>
 
-      {/* Post grid */}
-      <div className="grid grid-cols-3 gap-1 mt-1">
-        {(activeTab === "saved"
-          ? MOCK_POSTS.filter((p) => p.bookmarked)
-          : MOCK_POSTS
-        ).map((post, i) => (
-          <motion.button
-            key={post.id}
-            data-ocid={`profile.post.item.${i + 1}`}
-            className="aspect-square rounded-sm overflow-hidden relative group"
-            onClick={() => setSelectedPost(post)}
-            whileHover={{ opacity: 0.85 }}
+      <AnimatePresence mode="wait">
+        {/* Post/Saved grid */}
+        {(activeTab === "posts" || activeTab === "saved") && (
+          <motion.div
+            key="grid"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="grid grid-cols-3 gap-1 mt-1"
           >
-            {post.image ? (
-              <img
-                src={post.image}
-                alt="post"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div
-                className="w-full h-full flex items-center justify-center text-[11px] text-white font-medium p-2 text-center"
-                style={{ background: post.gradient }}
+            {(activeTab === "saved"
+              ? MOCK_POSTS.filter((p) => p.bookmarked)
+              : MOCK_POSTS
+            ).map((post, i) => (
+              <motion.button
+                key={post.id}
+                data-ocid={`profile.post.item.${i + 1}`}
+                className="aspect-square rounded-sm overflow-hidden relative group"
+                onClick={() => setSelectedPost(post)}
+                whileHover={{ opacity: 0.85 }}
               >
-                {post.caption.slice(0, 30)}...
+                {post.image ? (
+                  <img
+                    src={post.image}
+                    alt="post"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className="w-full h-full flex items-center justify-center text-[11px] text-white font-medium p-2 text-center"
+                    style={{ background: post.gradient }}
+                  >
+                    {post.caption.slice(0, 30)}...
+                  </div>
+                )}
+              </motion.button>
+            ))}
+          </motion.div>
+        )}
+
+        {/* Earning tab */}
+        {activeTab === "earning" && (
+          <motion.div
+            key="earning"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25 }}
+            className="mt-4 space-y-4 pb-8"
+          >
+            {/* Honor Tier Card */}
+            <div
+              className="rounded-2xl p-5 relative overflow-hidden"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(47,168,255,0.18) 0%, rgba(168,85,247,0.22) 60%, rgba(255,107,53,0.12) 100%)",
+                border: "1px solid rgba(168,85,247,0.3)",
+              }}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-3xl">{tier.emoji}</span>
+                <div>
+                  <p className="text-[11px] text-komo-text-muted uppercase tracking-widest">
+                    Current Tier
+                  </p>
+                  <p
+                    className="text-[20px] font-bold"
+                    style={{ color: tier.color }}
+                  >
+                    {tier.name}
+                  </p>
+                </div>
+                <div className="ml-auto text-right">
+                  <p className="text-[11px] text-komo-text-muted">
+                    Honor Points
+                  </p>
+                  <p className="text-[28px] font-bold komo-gradient-text leading-tight">
+                    {HONOR_POINTS.toLocaleString()}
+                  </p>
+                </div>
               </div>
-            )}
-          </motion.button>
-        ))}
-      </div>
+
+              {nextTier && (
+                <>
+                  <div className="flex justify-between text-[11px] text-komo-text-muted mb-1.5">
+                    <span>{tier.name}</span>
+                    <span>{nextTier.name}</span>
+                  </div>
+                  <Progress value={tierProgress} className="h-2 bg-white/10" />
+                  <p className="text-[12px] text-komo-text-secondary mt-2">
+                    <span
+                      className="font-semibold"
+                      style={{ color: nextTier.color }}
+                    >
+                      {(nextTier.min - HONOR_POINTS).toLocaleString()} pts
+                    </span>{" "}
+                    to reach {nextTier.emoji} {nextTier.name}
+                  </p>
+                </>
+              )}
+              {!nextTier && (
+                <p className="text-[12px] text-komo-text-secondary mt-2">
+                  🏆 You've reached the highest tier!
+                </p>
+              )}
+            </div>
+
+            {/* Activity Summary Grid */}
+            <div>
+              <p className="text-[13px] font-semibold text-komo-text-secondary mb-2 flex items-center gap-1.5">
+                <Zap size={14} className="text-komo-blue" /> Activity Summary
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {ACTIVITY_STATS.map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="rounded-xl p-3 flex flex-col items-center gap-1.5"
+                    style={{
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    <stat.icon size={18} style={{ color: stat.color }} />
+                    <p className="text-[15px] font-bold text-foreground">
+                      {stat.value}
+                    </p>
+                    <p className="text-[10px] text-komo-text-muted text-center leading-tight">
+                      {stat.label}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Earning History */}
+            <div>
+              <p className="text-[13px] font-semibold text-komo-text-secondary mb-2 flex items-center gap-1.5">
+                <TrendingUp size={14} className="text-komo-purple" /> Earning
+                History
+              </p>
+              <div
+                className="rounded-xl overflow-hidden"
+                style={{ border: "1px solid rgba(255,255,255,0.08)" }}
+              >
+                {EARNING_HISTORY.map((item, i) => (
+                  <div
+                    key={item.activity}
+                    className={`flex items-center gap-3 px-4 py-3 ${
+                      i < EARNING_HISTORY.length - 1
+                        ? "border-b border-white/5"
+                        : ""
+                    }`}
+                    style={{ background: "rgba(255,255,255,0.03)" }}
+                  >
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ background: "rgba(47,168,255,0.15)" }}
+                    >
+                      <item.icon size={15} className="text-komo-blue" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-medium text-foreground truncate">
+                        {item.activity}
+                      </p>
+                      <p className="text-[11px] text-komo-text-muted">
+                        {item.time}
+                      </p>
+                    </div>
+                    <Badge
+                      className="text-[11px] font-bold shrink-0"
+                      style={{
+                        background: "rgba(34,197,94,0.15)",
+                        color: "#4ade80",
+                        border: "1px solid rgba(34,197,94,0.3)",
+                      }}
+                    >
+                      +{item.points} pts
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Redeem Rewards */}
+            <div>
+              <p className="text-[13px] font-semibold text-komo-text-secondary mb-2 flex items-center gap-1.5">
+                <Star size={14} className="text-yellow-400" /> Redeem Rewards
+              </p>
+              <ScrollArea className="w-full">
+                <div className="flex gap-3 pb-2">
+                  {REWARDS.map((reward) => {
+                    const canRedeem = HONOR_POINTS >= reward.cost;
+                    return (
+                      <div
+                        key={reward.name}
+                        className="rounded-xl p-4 flex-shrink-0 w-40 flex flex-col gap-2 relative"
+                        style={{
+                          background: canRedeem
+                            ? "linear-gradient(135deg, rgba(47,168,255,0.1), rgba(168,85,247,0.12))"
+                            : "rgba(255,255,255,0.03)",
+                          border: canRedeem
+                            ? "1px solid rgba(168,85,247,0.3)"
+                            : "1px solid rgba(255,255,255,0.07)",
+                        }}
+                      >
+                        {!canRedeem && (
+                          <Lock
+                            size={12}
+                            className="absolute top-2.5 right-2.5 text-komo-text-muted opacity-60"
+                          />
+                        )}
+                        <span className="text-2xl">{reward.emoji}</span>
+                        <p
+                          className={`text-[12px] font-semibold leading-tight ${
+                            canRedeem
+                              ? "text-foreground"
+                              : "text-komo-text-muted"
+                          }`}
+                        >
+                          {reward.name}
+                        </p>
+                        <p className="text-[11px] text-komo-text-muted">
+                          {reward.cost.toLocaleString()} pts
+                        </p>
+                        <Button
+                          data-ocid="profile.primary_button"
+                          size="sm"
+                          variant="outline"
+                          disabled={!canRedeem}
+                          className={`mt-auto text-[11px] h-7 ${
+                            canRedeem
+                              ? "border-komo-purple text-komo-purple hover:bg-komo-purple/10"
+                              : "border-white/10 text-komo-text-muted cursor-not-allowed"
+                          }`}
+                          onClick={() =>
+                            canRedeem
+                              ? toast.success(`Redeemed: ${reward.name}!`)
+                              : undefined
+                          }
+                        >
+                          {canRedeem ? "Redeem" : "Locked"}
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <PostDetailModal
         post={selectedPost}
