@@ -39,6 +39,7 @@ import {
   Headphones,
   LayoutDashboard,
   Loader2,
+  Megaphone,
   Package,
   Plus,
   RefreshCw,
@@ -73,6 +74,7 @@ const SIDEBAR_ITEMS = [
   { id: "moderation", label: "Moderation", icon: Shield },
   { id: "marketplace", label: "Marketplace", icon: ShoppingBag },
   { id: "analytics", label: "Analytics", icon: BarChart2 },
+  { id: "ads", label: "Ads", icon: Megaphone },
   { id: "owner", label: "Owner", icon: Crown },
 ];
 
@@ -217,6 +219,67 @@ function StatCard({
   );
 }
 
+const ADS_DATA_INIT = [
+  {
+    id: 1,
+    title: "Summer Sale",
+    advertiser: "FashionBrand",
+    type: "Banner",
+    status: "Active",
+    impressions: "450K",
+    ctr: "3.2%",
+    budget: "₹12,000",
+  },
+  {
+    id: 2,
+    title: "New App Launch",
+    advertiser: "TechCorp",
+    type: "Video",
+    status: "Active",
+    impressions: "220K",
+    ctr: "5.8%",
+    budget: "₹25,000",
+  },
+  {
+    id: 3,
+    title: "Food Delivery Offer",
+    advertiser: "QuickEats",
+    type: "Story",
+    status: "Paused",
+    impressions: "180K",
+    ctr: "2.1%",
+    budget: "₹8,500",
+  },
+  {
+    id: 4,
+    title: "Fitness Challenge",
+    advertiser: "GymPro",
+    type: "Banner",
+    status: "Active",
+    impressions: "310K",
+    ctr: "4.5%",
+    budget: "₹15,000",
+  },
+  {
+    id: 5,
+    title: "Online Course",
+    advertiser: "LearnNow",
+    type: "Video",
+    status: "Ended",
+    impressions: "95K",
+    ctr: "1.9%",
+    budget: "₹5,000",
+  },
+];
+
+const AD_THUMB_GRADIENTS = [
+  "linear-gradient(135deg, #2FA8FF, #A855F7)",
+  "linear-gradient(135deg, #f59e0b, #ef4444)",
+  "linear-gradient(135deg, #22c55e, #2FA8FF)",
+  "linear-gradient(135deg, #A855F7, #ec4899)",
+  "linear-gradient(135deg, #64748b, #475569)",
+];
+
 export default function Admin() {
   const { isAdmin: _isAdmin } = useApp();
   const [activeSection, setActiveSection] = useState("overview");
@@ -231,6 +294,18 @@ export default function Admin() {
     category: "",
     stock: "",
   });
+
+  // Ads section state
+  const [createAdOpen, setCreateAdOpen] = useState(false);
+  const [adFrequency, setAdFrequency] = useState(3);
+  const [newAd, setNewAd] = useState({
+    title: "",
+    advertiser: "",
+    type: "Banner",
+    budget: "",
+    duration: "7 days",
+  });
+  const [adsData, setAdsData] = useState(ADS_DATA_INIT);
 
   // Owner section state
   const [ownerRoles, setOwnerRoles] = useState<Record<string, string>>(
@@ -1061,6 +1136,367 @@ export default function Admin() {
           )}
 
           {/* Owner Management */}
+
+          {/* Ads Management */}
+          {activeSection === "ads" && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-5"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Megaphone size={20} className="text-blue-400" />
+                  <h2 className="text-lg font-bold text-foreground">
+                    Ads Management
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  data-ocid="ads.create_ad.open_modal_button"
+                  onClick={() => setCreateAdOpen(true)}
+                  className="komo-gradient text-white text-sm font-semibold px-4 py-2 rounded-xl flex items-center gap-2 shadow-md hover:opacity-90 transition-opacity"
+                >
+                  <Plus size={15} /> Create New Ad
+                </button>
+              </div>
+
+              {/* Stats Row */}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {[
+                  { label: "Total Ads", value: "12", color: "#2FA8FF" },
+                  { label: "Active Ads", value: "8", color: "#22c55e" },
+                  { label: "Impressions", value: "2.4M", color: "#A855F7" },
+                  { label: "Revenue", value: "₹48,500", color: "#f59e0b" },
+                ].map((stat, i) => (
+                  <motion.div
+                    key={stat.label}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.07 }}
+                    data-ocid={`ads.stats.card.${i + 1}`}
+                    className="komo-surface rounded-2xl p-4 komo-card-shadow"
+                  >
+                    <p className="text-xs text-komo-text-muted mb-1">
+                      {stat.label}
+                    </p>
+                    <p
+                      className="text-xl font-bold"
+                      style={{ color: stat.color }}
+                    >
+                      {stat.value}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Ads List */}
+              <div className="komo-surface rounded-2xl komo-card-shadow overflow-hidden">
+                <div className="px-4 py-3 border-b border-komo-border/40">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Active Campaigns
+                  </h3>
+                </div>
+                <div className="divide-y divide-komo-border/30">
+                  {adsData.map((ad, i) => (
+                    <motion.div
+                      key={ad.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.06 }}
+                      data-ocid={`ads.item.${i + 1}`}
+                      className="flex items-center gap-3 px-4 py-3"
+                    >
+                      {/* Thumbnail */}
+                      <div
+                        className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center text-white font-bold text-sm"
+                        style={{
+                          background:
+                            AD_THUMB_GRADIENTS[i % AD_THUMB_GRADIENTS.length],
+                        }}
+                      >
+                        {ad.title[0]}
+                      </div>
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate">
+                          {ad.title}
+                        </p>
+                        <p className="text-xs text-komo-text-muted">
+                          {ad.advertiser}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium bg-blue-500/15 text-blue-400">
+                            {ad.type}
+                          </span>
+                          <span
+                            className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium ${
+                              ad.status === "Active"
+                                ? "bg-green-500/15 text-green-400"
+                                : ad.status === "Paused"
+                                  ? "bg-yellow-500/15 text-yellow-400"
+                                  : "bg-red-500/15 text-red-400"
+                            }`}
+                          >
+                            {ad.status}
+                          </span>
+                        </div>
+                      </div>
+                      {/* Metrics */}
+                      <div className="hidden sm:flex flex-col items-end text-right gap-0.5">
+                        <p className="text-xs text-komo-text-muted">
+                          {ad.impressions} imp.
+                        </p>
+                        <p className="text-xs text-komo-text-muted">
+                          CTR {ad.ctr}
+                        </p>
+                        <p className="text-xs font-semibold text-foreground">
+                          {ad.budget}
+                        </p>
+                      </div>
+                      {/* Actions */}
+                      <div className="flex items-center gap-1 ml-1">
+                        <button
+                          type="button"
+                          data-ocid={`ads.pause_toggle.${i + 1}`}
+                          onClick={() =>
+                            setAdsData((prev) =>
+                              prev.map((a) =>
+                                a.id === ad.id
+                                  ? {
+                                      ...a,
+                                      status:
+                                        a.status === "Active"
+                                          ? "Paused"
+                                          : "Active",
+                                    }
+                                  : a,
+                              ),
+                            )
+                          }
+                          className={`p-1.5 rounded-lg text-xs font-medium transition-colors ${ad.status === "Active" ? "bg-yellow-500/15 text-yellow-400 hover:bg-yellow-500/25" : "bg-green-500/15 text-green-400 hover:bg-green-500/25"}`}
+                          title={ad.status === "Active" ? "Pause" : "Resume"}
+                        >
+                          {ad.status === "Active" ? (
+                            <ToggleLeft size={14} />
+                          ) : (
+                            <ToggleRight size={14} />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          data-ocid={`ads.edit_button.${i + 1}`}
+                          className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors"
+                        >
+                          <Edit size={13} />
+                        </button>
+                        <button
+                          type="button"
+                          data-ocid={`ads.delete_button.${i + 1}`}
+                          onClick={() => {
+                            setAdsData((prev) =>
+                              prev.filter((a) => a.id !== ad.id),
+                            );
+                            toast.success("Ad removed");
+                          }}
+                          className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Placement Settings */}
+              <div className="komo-surface rounded-2xl p-4 komo-card-shadow space-y-4">
+                <h3 className="text-sm font-semibold text-foreground">
+                  Ad Placement Settings
+                </h3>
+                {[
+                  { key: "feed", label: "Show ads in Feed", default: true },
+                  { key: "reels", label: "Show ads in Reels", default: true },
+                  {
+                    key: "stories",
+                    label: "Show ads in Stories",
+                    default: false,
+                  },
+                ].map((item) => (
+                  <div
+                    key={item.key}
+                    className="flex items-center justify-between"
+                  >
+                    <span className="text-sm text-komo-text-secondary">
+                      {item.label}
+                    </span>
+                    <Switch
+                      data-ocid={`ads.placement.${item.key}.switch`}
+                      defaultChecked={item.default}
+                    />
+                  </div>
+                ))}
+                <div className="pt-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-komo-text-secondary">
+                      Ad frequency (every N posts)
+                    </span>
+                    <span className="text-sm font-bold text-foreground">
+                      {adFrequency}
+                    </span>
+                  </div>
+                  <Slider
+                    data-ocid="ads.frequency.slider"
+                    min={1}
+                    max={10}
+                    step={1}
+                    value={[adFrequency]}
+                    onValueChange={([v]) => setAdFrequency(v)}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+
+              {/* Create Ad Modal */}
+              <Dialog open={createAdOpen} onOpenChange={setCreateAdOpen}>
+                <DialogContent
+                  data-ocid="ads.create.dialog"
+                  className="komo-surface border-komo-border max-w-md"
+                >
+                  <DialogHeader>
+                    <DialogTitle className="text-foreground flex items-center gap-2">
+                      <Megaphone size={16} className="text-blue-400" /> Launch
+                      New Ad
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-3 mt-2">
+                    <div>
+                      <p className="text-xs text-komo-text-muted mb-1">
+                        Ad Title
+                      </p>
+                      <Input
+                        data-ocid="ads.create.title.input"
+                        placeholder="e.g. Summer Sale 2026"
+                        value={newAd.title}
+                        onChange={(e) =>
+                          setNewAd((p) => ({ ...p, title: e.target.value }))
+                        }
+                        className="bg-komo-bg border-komo-border text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-xs text-komo-text-muted mb-1">
+                        Advertiser Name
+                      </p>
+                      <Input
+                        data-ocid="ads.create.advertiser.input"
+                        placeholder="e.g. FashionBrand"
+                        value={newAd.advertiser}
+                        onChange={(e) =>
+                          setNewAd((p) => ({
+                            ...p,
+                            advertiser: e.target.value,
+                          }))
+                        }
+                        className="bg-komo-bg border-komo-border text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-xs text-komo-text-muted mb-1">
+                        Ad Type
+                      </p>
+                      <select
+                        data-ocid="ads.create.type.select"
+                        value={newAd.type}
+                        onChange={(e) =>
+                          setNewAd((p) => ({ ...p, type: e.target.value }))
+                        }
+                        className="w-full rounded-xl border border-komo-border bg-komo-bg text-foreground px-3 py-2 text-sm"
+                      >
+                        <option value="Banner">Banner</option>
+                        <option value="Video">Video</option>
+                        <option value="Story">Story</option>
+                      </select>
+                    </div>
+                    <div>
+                      <p className="text-xs text-komo-text-muted mb-1">
+                        Budget (₹)
+                      </p>
+                      <Input
+                        data-ocid="ads.create.budget.input"
+                        type="number"
+                        placeholder="e.g. 10000"
+                        value={newAd.budget}
+                        onChange={(e) =>
+                          setNewAd((p) => ({ ...p, budget: e.target.value }))
+                        }
+                        className="bg-komo-bg border-komo-border text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-xs text-komo-text-muted mb-1">
+                        Duration
+                      </p>
+                      <div
+                        className="flex gap-2"
+                        data-ocid="ads.create.duration.radio"
+                      >
+                        {["7 days", "15 days", "30 days"].map((d) => (
+                          <button
+                            type="button"
+                            key={d}
+                            onClick={() =>
+                              setNewAd((p) => ({ ...p, duration: d }))
+                            }
+                            className={`flex-1 py-1.5 rounded-xl text-sm font-medium border transition-all ${newAd.duration === d ? "komo-gradient text-white border-transparent" : "border-komo-border text-komo-text-secondary"}`}
+                          >
+                            {d}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      data-ocid="ads.create.submit_button"
+                      onClick={() => {
+                        if (!newAd.title || !newAd.advertiser) {
+                          toast.error("Please fill all fields");
+                          return;
+                        }
+                        setAdsData((prev) => [
+                          ...prev,
+                          {
+                            id: Date.now(),
+                            title: newAd.title,
+                            advertiser: newAd.advertiser,
+                            type: newAd.type,
+                            status: "Active",
+                            impressions: "0",
+                            ctr: "0%",
+                            budget: `₹${newAd.budget || "0"}`,
+                          },
+                        ]);
+                        toast.success("Ad launched successfully!");
+                        setCreateAdOpen(false);
+                        setNewAd({
+                          title: "",
+                          advertiser: "",
+                          type: "Banner",
+                          budget: "",
+                          duration: "7 days",
+                        });
+                      }}
+                      className="w-full komo-gradient text-white font-semibold py-2.5 rounded-xl hover:opacity-90 transition-opacity mt-1"
+                    >
+                      🚀 Launch Ad
+                    </button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </motion.div>
+          )}
+
           {activeSection === "owner" && (
             <motion.div
               initial={{ opacity: 0 }}

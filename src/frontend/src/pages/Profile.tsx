@@ -145,12 +145,36 @@ export default function Profile() {
     <div className="max-w-2xl mx-auto px-4 py-4">
       {/* Cover */}
       <div
-        className="h-32 rounded-2xl mb-0 -mb-8 relative"
+        className="h-32 rounded-2xl mb-0 -mb-8 relative flex items-center justify-center"
         style={{
           background:
             "linear-gradient(135deg, rgba(47,168,255,0.3) 0%, rgba(168,85,247,0.3) 100%)",
         }}
       >
+        {/* KomoFast logo centered in cover */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="flex flex-col items-center gap-1"
+        >
+          <img
+            src="/assets/generated/komofast-logo-transparent.dim_200x200.png"
+            alt="KomoFast"
+            className="w-14 h-14 object-contain"
+            style={{
+              filter:
+                "drop-shadow(0 0 12px rgba(168,85,247,0.7)) drop-shadow(0 0 24px rgba(47,168,255,0.5))",
+            }}
+          />
+          <span
+            className="text-[10px] font-bold tracking-widest uppercase text-white/70"
+            style={{ textShadow: "0 0 10px rgba(168,85,247,0.8)" }}
+          >
+            KomoFast
+          </span>
+        </motion.div>
+
         {isOwnProfile && (
           <div className="absolute top-3 right-3 flex gap-2">
             <button
@@ -198,6 +222,20 @@ export default function Profile() {
             <p className="text-[13px] text-komo-text-muted">
               @{profile.username}
             </p>
+            {/* KomoFast inline brand badge */}
+            <div className="flex items-center gap-1 mt-1">
+              <img
+                src="/assets/generated/komofast-logo-transparent.dim_200x200.png"
+                alt="KomoFast"
+                className="w-4 h-4 object-contain opacity-80"
+                style={{
+                  filter: "drop-shadow(0 0 4px rgba(168,85,247,0.6))",
+                }}
+              />
+              <span className="text-[10px] text-komo-text-muted font-medium tracking-wide">
+                KomoFast Member
+              </span>
+            </div>
           </div>
 
           {!isOwnProfile ? (
