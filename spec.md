@@ -1,38 +1,28 @@
 # Komofast Social
 
 ## Current State
-Profile page shows creator earnings for creators only. Regular (non-creator) users have no earning/reward section. There is no honor points or customer reward system.
+Social media PWA with blue-purple gradient UI, posts/stories/reels, profile, admin panel, marketplace, chat, honor earning system. No Academy or Wallet pages currently.
 
 ## Requested Changes (Diff)
 
 ### Add
-- **Honor Earning System** for all customers (Redmi-style honor points)
-  - Honor Points balance displayed prominently on profile
-  - Earning history: points earned from activities (watch reels, like posts, share, daily login, refer friend, purchase)
-  - Honor Level/Tier badge: Bronze, Silver, Gold, Platinum based on total points
-  - Redeem section: redeem points for discounts, marketplace credits, or exclusive badges
-  - Progress bar showing points needed to reach next tier
-- **Customer Earning Profile tab** on Profile page
-  - New "Earning" tab alongside Posts and Saved tabs
-  - Shows honor points overview card with tier badge
-  - Activity breakdown: daily login streak, watch count, likes given, shares, referrals
-  - Earning history list with timestamps
-  - Redeem button with available rewards
+- `/academy` page: course grid, course detail modal, Netflix-style subscription (₹199/month, ₹999/year), teacher dashboard with earnings/payout, buy individual courses
+- `/wallet` page: ₹ balance card, KomoCoin balance, withdraw modal (UPI/Bank), transaction history, earning breakdown
+- Admin Monetization tab: revenue stats, commission rate slider, ads toggle, payout approvals
+- Academy and Wallet routes in App.tsx
+- BottomNav: add Academy (GraduationCap icon) tab replacing or alongside existing tabs
 
 ### Modify
-- Profile page: add "Earning" tab in tab row
-- Profile stats: show Honor Points alongside followers/following for all users
+- App.tsx: add academy and wallet lazy imports and routes
+- BottomNav: add Academy nav item
+- Admin.tsx: add Monetization tab with commission/ads/payout controls
 
 ### Remove
-- Nothing removed
+- Nothing
 
 ## Implementation Plan
-1. Create mock honor earning data (points, tier, history, rewards)
-2. Add HonorEarning tab section in Profile.tsx with:
-   - Tier card (Bronze/Silver/Gold/Platinum) with gradient and badge
-   - Points progress bar to next tier
-   - Activity summary grid (login streak, watches, likes, shares)
-   - Earning history list
-   - Redeem rewards section
-3. Add "Earning" tab button to profile tab row
-4. Add small honor points display in profile stats row
+1. Create Academy.tsx - course grid, tabs (Browse/My Learning/Teach), subscription modal, course buy modal
+2. Create Wallet.tsx - balance cards, withdraw modal, transaction history
+3. Update App.tsx to add routes
+4. Update BottomNav to add Academy tab
+5. Update Admin.tsx to add Monetization tab

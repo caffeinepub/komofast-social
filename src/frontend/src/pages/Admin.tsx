@@ -280,11 +280,279 @@ const AD_THUMB_GRADIENTS = [
   "linear-gradient(135deg, #64748b, #475569)",
 ];
 
+const CATEGORY_META: Record<
+  string,
+  { label: string; emoji: string; bgColor: string; textColor: string }
+> = {
+  fake_news: {
+    label: "Fake News",
+    emoji: "🗞️",
+    bgColor: "bg-orange-500/15",
+    textColor: "text-orange-400",
+  },
+  adult_content: {
+    label: "Adult Content",
+    emoji: "🔞",
+    bgColor: "bg-red-500/15",
+    textColor: "text-red-400",
+  },
+  hate_speech: {
+    label: "Hate Speech",
+    emoji: "💬",
+    bgColor: "bg-red-600/15",
+    textColor: "text-red-500",
+  },
+  spam: {
+    label: "Spam",
+    emoji: "📢",
+    bgColor: "bg-yellow-500/15",
+    textColor: "text-yellow-400",
+  },
+  other: {
+    label: "Other",
+    emoji: "⚠️",
+    bgColor: "bg-white/10",
+    textColor: "text-komo-text-muted",
+  },
+};
+
+function ModerationPanel() {
+  const { reportedItems, bannedUsers, banUser, unbanUser, updateReportStatus } =
+    useApp();
+  const pendingReports = reportedItems.filter((r) => r.status === "pending");
+  const removedCount = reportedItems.filter(
+    (r) => r.status === "removed",
+  ).length;
+
+  const formatTime = (d: Date) => {
+    const mins = Math.round((Date.now() - d.getTime()) / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    if (mins < 1440) return `${Math.round(mins / 60)}h ago`;
+    return `${Math.round(mins / 1440)}d ago`;
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h1 className="text-[20px] font-bold text-foreground">
+          Content Moderation
+        </h1>
+        <Badge className="bg-orange-500/15 text-orange-400 border-orange-500/30">
+          {pendingReports.length} pending
+        </Badge>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="komo-surface rounded-xl p-3 komo-card-shadow text-center">
+          <p className="text-[22px] font-bold text-orange-400">
+            {pendingReports.length}
+          </p>
+          <p className="text-[11px] text-komo-text-muted mt-0.5">
+            Pending Reports
+          </p>
+        </div>
+        <div className="komo-surface rounded-xl p-3 komo-card-shadow text-center">
+          <p className="text-[22px] font-bold text-red-400">{removedCount}</p>
+          <p className="text-[11px] text-komo-text-muted mt-0.5">Removed</p>
+        </div>
+        <div className="komo-surface rounded-xl p-3 komo-card-shadow text-center">
+          <p className="text-[22px] font-bold text-foreground">
+            {bannedUsers.length}
+          </p>
+          <p className="text-[11px] text-komo-text-muted mt-0.5">
+            Banned Users
+          </p>
+        </div>
+      </div>
+
+      {/* Reports Queue */}
+      <div className="komo-surface rounded-2xl komo-card-shadow overflow-hidden">
+        <div className="px-4 py-3 border-b border-komo-border flex items-center gap-2">
+          <Shield size={15} className="text-komo-blue" />
+          <span className="text-[14px] font-semibold text-foreground">
+            Reports Queue
+          </span>
+        </div>
+        {pendingReports.length === 0 ? (
+          <div
+            data-ocid="admin.moderation.empty_state"
+            className="text-center py-10"
+          >
+            <Check size={32} className="text-green-400 mx-auto mb-2" />
+            <p className="text-foreground font-semibold text-[14px]">
+              No pending reports
+            </p>
+            <p className="text-komo-text-muted text-[12px] mt-0.5">
+              All clear!
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col divide-y divide-komo-border">
+            {pendingReports.map((report, i) => {
+              const meta =
+                CATEGORY_META[report.category] ?? CATEGORY_META.other;
+              return (
+                <motion.div
+                  key={report.id}
+                  data-ocid={`admin.moderation.item.${i + 1}`}
+                  className="p-4"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  <div className="flex items-start gap-3 mb-3">
+                    <div
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0"
+                      style={{
+                        background:
+                          AVATAR_GRADIENTS[i % AVATAR_GRADIENTS.length],
+                      }}
+                    >
+                      {report.targetUsername.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[13px] font-semibold text-foreground">
+                          @{report.targetUsername}
+                        </span>
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${meta.bgColor} ${meta.textColor}`}
+                        >
+                          {meta.emoji} {meta.label}
+                        </span>
+                        <Badge className="text-[9px] bg-accent text-komo-text-muted border-0">
+                          {report.type}
+                        </Badge>
+                        <span className="text-[11px] text-komo-text-muted ml-auto">
+                          {formatTime(report.timestamp)}
+                        </span>
+                      </div>
+                      {report.description && (
+                        <p className="text-[12px] text-komo-text-secondary mt-1 line-clamp-2">
+                          {report.description}
+                        </p>
+                      )}
+                      <p className="text-[11px] text-komo-text-muted mt-0.5">
+                        Reported by @{report.reportedBy}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      data-ocid={`admin.moderation.remove.${i + 1}`}
+                      size="sm"
+                      className="flex-1 bg-red-500/15 text-red-400 hover:bg-red-500/25 border-0 text-[12px] h-8"
+                      onClick={() => {
+                        updateReportStatus(report.id, "removed");
+                        toast.success("Content removed");
+                      }}
+                    >
+                      <Trash2 size={12} className="mr-1" /> Remove
+                    </Button>
+                    <Button
+                      data-ocid={`admin.moderation.dismiss.${i + 1}`}
+                      size="sm"
+                      variant="ghost"
+                      className="flex-1 text-komo-text-muted hover:text-foreground text-[12px] h-8"
+                      onClick={() => {
+                        updateReportStatus(report.id, "dismissed");
+                        toast.success("Report dismissed");
+                      }}
+                    >
+                      <X size={12} className="mr-1" /> Dismiss
+                    </Button>
+                    <Button
+                      data-ocid={`admin.moderation.ban.${i + 1}`}
+                      size="sm"
+                      className="bg-red-900/30 text-red-300 hover:bg-red-900/50 border-0 text-[12px] h-8 px-3"
+                      onClick={() => {
+                        banUser(report.targetUsername);
+                        updateReportStatus(report.id, "removed");
+                        toast.success(`@${report.targetUsername} banned`);
+                      }}
+                    >
+                      Ban User
+                    </Button>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Banned Users */}
+      <div className="komo-surface rounded-2xl komo-card-shadow overflow-hidden">
+        <div className="px-4 py-3 border-b border-komo-border flex items-center gap-2">
+          <Users size={15} className="text-red-400" />
+          <span className="text-[14px] font-semibold text-foreground">
+            Banned Users
+          </span>
+          {bannedUsers.length > 0 && (
+            <Badge className="ml-auto bg-red-500/15 text-red-400 border-red-500/30 text-[10px]">
+              {bannedUsers.length}
+            </Badge>
+          )}
+        </div>
+        {bannedUsers.length === 0 ? (
+          <div
+            data-ocid="admin.banned.empty_state"
+            className="text-center py-8"
+          >
+            <p className="text-komo-text-muted text-[13px]">No banned users</p>
+          </div>
+        ) : (
+          <div className="flex flex-col divide-y divide-komo-border">
+            {bannedUsers.map((username, i) => (
+              <div
+                key={username}
+                data-ocid={`admin.banned.item.${i + 1}`}
+                className="flex items-center justify-between px-4 py-3"
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white"
+                    style={{
+                      background: AVATAR_GRADIENTS[i % AVATAR_GRADIENTS.length],
+                    }}
+                  >
+                    {username.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-semibold text-foreground">
+                      @{username}
+                    </p>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-400 font-semibold">
+                      BANNED
+                    </span>
+                  </div>
+                </div>
+                <Button
+                  data-ocid={`admin.banned.unban.${i + 1}`}
+                  size="sm"
+                  variant="outline"
+                  className="border-green-700/50 text-green-400 hover:bg-green-900/20 text-[12px] h-8"
+                  onClick={() => {
+                    unbanUser(username);
+                    toast.success(`@${username} unbanned`);
+                  }}
+                >
+                  Unban
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Admin() {
   const { isAdmin: _isAdmin } = useApp();
   const [activeSection, setActiveSection] = useState("overview");
   const [users, setUsers] = useState(MOCK_USERS_ADMIN);
-  const [pendingPosts, setPendingPosts] = useState(MOCK_PENDING_POSTS);
+  const [_pendingPosts, setPendingPosts] = useState(MOCK_PENDING_POSTS);
   const [products, setProducts] = useState(MOCK_PRODUCTS);
   const [addProductOpen, setAddProductOpen] = useState(false);
   const [newProduct, setNewProduct] = useState({
@@ -353,19 +621,56 @@ export default function Admin() {
     "fake",
   ]);
   const [newBannedWord, setNewBannedWord] = useState("");
+  const [commissionRate, setCommissionRate] = useState(30);
+  const [adsEnabled, setAdsEnabled] = useState(true);
+  const [subscriptionEnabled, setSubscriptionEnabled] = useState(true);
+  const [payoutQueue, setPayoutQueue] = useState([
+    {
+      id: "p1",
+      teacher: "Anjali Sharma",
+      amount: 4200,
+      course: "React Masterclass",
+      date: "Mar 15",
+      status: "pending",
+    },
+    {
+      id: "p2",
+      teacher: "Rahul Verma",
+      amount: 2800,
+      course: "Python for Beginners",
+      date: "Mar 14",
+      status: "pending",
+    },
+    {
+      id: "p3",
+      teacher: "Priya Singh",
+      amount: 6150,
+      course: "UI/UX Design Pro",
+      date: "Mar 13",
+      status: "pending",
+    },
+    {
+      id: "p4",
+      teacher: "Vikram Nair",
+      amount: 1950,
+      course: "Digital Marketing",
+      date: "Mar 12",
+      status: "pending",
+    },
+  ]);
 
   const { data: stats } = usePlatformStats();
   const approvePost = useApprovePost();
   const rejectPost = useRejectPost();
   const toggleUser = useToggleUserActive();
 
-  const handleApprove = (id: string) => {
+  const _handleApprove = (id: string) => {
     setPendingPosts((prev) => prev.filter((p) => p.id !== id));
     approvePost.mutate(id);
     toast.success("Post approved!");
   };
 
-  const handleReject = (id: string) => {
+  const _handleReject = (id: string) => {
     setPendingPosts((prev) => prev.filter((p) => p.id !== id));
     rejectPost.mutate(id);
     toast.error("Post rejected");
@@ -568,40 +873,241 @@ export default function Admin() {
                 </div>
               </div>
 
-              {/* Monetization placeholders */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="komo-surface rounded-2xl komo-card-shadow p-4">
-                  <h4 className="text-[13px] font-semibold text-foreground mb-2">
-                    Ad Revenue
-                  </h4>
-                  <p className="text-[22px] font-bold komo-gradient-text">
-                    $14,280
-                  </p>
-                  <p className="text-[11px] text-green-400 mt-1">
-                    +12.4% this month
-                  </p>
+              {/* Monetization — Revenue Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  {
+                    label: "Total Revenue",
+                    value: "₹1,84,200",
+                    growth: "+18.2%",
+                    icon: "💰",
+                  },
+                  {
+                    label: "Course Sales",
+                    value: "₹1,12,500",
+                    growth: "+24.6%",
+                    icon: "🎓",
+                  },
+                  {
+                    label: "Ad Revenue",
+                    value: "₹38,400",
+                    growth: "+11.3%",
+                    icon: "📢",
+                  },
+                  {
+                    label: "Subscriptions",
+                    value: "₹33,300",
+                    growth: "+32.1%",
+                    icon: "⭐",
+                  },
+                ].map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="komo-surface rounded-2xl komo-card-shadow p-4"
+                  >
+                    <div className="text-[20px] mb-1">{stat.icon}</div>
+                    <h4 className="text-[11px] font-medium text-komo-text-muted mb-1">
+                      {stat.label}
+                    </h4>
+                    <p className="text-[18px] font-bold komo-gradient-text">
+                      {stat.value}
+                    </p>
+                    <p className="text-[11px] text-green-400 mt-1">
+                      {stat.growth} this month
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Commission Rate Slider */}
+              <div className="komo-surface rounded-2xl komo-card-shadow p-5">
+                <h3 className="text-[14px] font-semibold text-foreground mb-1">
+                  Commission & Revenue Split
+                </h3>
+                <p className="text-[12px] text-komo-text-muted mb-4">
+                  Drag to adjust platform commission rate
+                </p>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-purple-500" />
+                    <span className="text-[12px] text-komo-text-secondary">
+                      Platform Commission
+                    </span>
+                    <span className="text-[14px] font-bold komo-gradient-text">
+                      {commissionRate}%
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-blue-400" />
+                    <span className="text-[12px] text-komo-text-secondary">
+                      Teacher Share
+                    </span>
+                    <span className="text-[14px] font-bold text-blue-400">
+                      {100 - commissionRate}%
+                    </span>
+                  </div>
                 </div>
-                <div className="komo-surface rounded-2xl komo-card-shadow p-4">
-                  <h4 className="text-[13px] font-semibold text-foreground mb-2">
-                    Boosted Posts
-                  </h4>
-                  <p className="text-[22px] font-bold komo-gradient-text">
-                    284
-                  </p>
-                  <p className="text-[11px] text-green-400 mt-1">
-                    Active boosts this week
-                  </p>
+                <Slider
+                  data-ocid="admin.commission.slider"
+                  value={[commissionRate]}
+                  onValueChange={(v) => setCommissionRate(v[0])}
+                  min={5}
+                  max={50}
+                  step={1}
+                  className="w-full"
+                />
+                <div className="flex justify-between mt-1">
+                  <span className="text-[10px] text-komo-text-muted">
+                    5% (min)
+                  </span>
+                  <span className="text-[10px] text-komo-text-muted">
+                    50% (max)
+                  </span>
                 </div>
-                <div className="komo-surface rounded-2xl komo-card-shadow p-4">
-                  <h4 className="text-[13px] font-semibold text-foreground mb-2">
-                    Marketplace Commission
-                  </h4>
-                  <p className="text-[22px] font-bold komo-gradient-text">
-                    $2,847
-                  </p>
-                  <p className="text-[11px] text-green-400 mt-1">
-                    5% on all transactions
-                  </p>
+                <p className="text-[11px] text-komo-text-muted mt-3">
+                  On a ₹1,000 course: Platform earns{" "}
+                  <span className="text-purple-400 font-semibold">
+                    ₹{commissionRate * 10}
+                  </span>
+                  , Teacher earns{" "}
+                  <span className="text-blue-400 font-semibold">
+                    ₹{(100 - commissionRate) * 10}
+                  </span>
+                </p>
+              </div>
+
+              {/* Toggles Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="komo-surface rounded-2xl komo-card-shadow p-4 flex items-center justify-between">
+                  <div>
+                    <h4 className="text-[13px] font-semibold text-foreground">
+                      Ads Integration
+                    </h4>
+                    <p className="text-[11px] text-komo-text-muted mt-0.5">
+                      Show ads to free users between content
+                    </p>
+                  </div>
+                  <Switch
+                    data-ocid="admin.ads.toggle"
+                    checked={adsEnabled}
+                    onCheckedChange={(v) => {
+                      setAdsEnabled(v);
+                      toast.success(`Ads ${v ? "enabled" : "disabled"}`);
+                    }}
+                  />
+                </div>
+                <div className="komo-surface rounded-2xl komo-card-shadow p-4 flex items-center justify-between">
+                  <div>
+                    <h4 className="text-[13px] font-semibold text-foreground">
+                      Academy Subscriptions
+                    </h4>
+                    <p className="text-[11px] text-komo-text-muted mt-0.5">
+                      ₹199/mo · ₹999/yr — Netflix model
+                    </p>
+                  </div>
+                  <Switch
+                    data-ocid="admin.subscription.toggle"
+                    checked={subscriptionEnabled}
+                    onCheckedChange={(v) => {
+                      setSubscriptionEnabled(v);
+                      toast.success(
+                        `Subscriptions ${v ? "enabled" : "disabled"}`,
+                      );
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Payout Approvals Queue */}
+              <div className="komo-surface rounded-2xl komo-card-shadow overflow-hidden">
+                <div className="p-4 border-b border-komo-border flex items-center justify-between">
+                  <h3 className="text-[14px] font-semibold text-foreground">
+                    Pending Teacher Payouts
+                  </h3>
+                  <span className="text-[11px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full font-medium">
+                    {payoutQueue.filter((p) => p.status === "pending").length}{" "}
+                    pending
+                  </span>
+                </div>
+                <div className="divide-y divide-komo-border">
+                  {payoutQueue.map((payout, i) => (
+                    <div
+                      key={payout.id}
+                      data-ocid={`admin.payout.row.${i + 1}`}
+                      className="p-4 flex items-center gap-3"
+                    >
+                      <div className="w-9 h-9 rounded-full komo-gradient flex items-center justify-center text-white text-[13px] font-bold flex-shrink-0">
+                        {payout.teacher.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-semibold text-foreground truncate">
+                          {payout.teacher}
+                        </p>
+                        <p className="text-[11px] text-komo-text-muted truncate">
+                          {payout.course}
+                        </p>
+                      </div>
+                      <div className="text-right mr-3">
+                        <p className="text-[14px] font-bold komo-gradient-text">
+                          ₹{payout.amount.toLocaleString()}
+                        </p>
+                        <p className="text-[10px] text-komo-text-muted">
+                          {payout.date}
+                        </p>
+                      </div>
+                      {payout.status === "pending" ? (
+                        <div className="flex gap-2">
+                          <Button
+                            data-ocid={`admin.payout.confirm_button.${i + 1}`}
+                            size="sm"
+                            className="komo-gradient border-0 text-white text-[11px] h-7 px-3"
+                            onClick={() => {
+                              setPayoutQueue((prev) =>
+                                prev.map((p) =>
+                                  p.id === payout.id
+                                    ? { ...p, status: "approved" }
+                                    : p,
+                                ),
+                              );
+                              toast.success(
+                                `Payout of ₹${payout.amount.toLocaleString()} approved for ${payout.teacher}`,
+                              );
+                            }}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            data-ocid={`admin.payout.delete_button.${i + 1}`}
+                            size="sm"
+                            variant="outline"
+                            className="border-red-800/50 text-red-400 hover:bg-red-900/20 text-[11px] h-7 px-3"
+                            onClick={() => {
+                              setPayoutQueue((prev) =>
+                                prev.map((p) =>
+                                  p.id === payout.id
+                                    ? { ...p, status: "rejected" }
+                                    : p,
+                                ),
+                              );
+                              toast.error(
+                                `Payout rejected for ${payout.teacher}`,
+                              );
+                            }}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      ) : (
+                        <span
+                          className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${payout.status === "approved" ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}
+                        >
+                          {payout.status === "approved"
+                            ? "Approved"
+                            : "Rejected"}
+                        </span>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </motion.div>
@@ -722,99 +1228,7 @@ export default function Admin() {
           )}
 
           {/* Moderation */}
-          {activeSection === "moderation" && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="space-y-4"
-            >
-              <div className="flex items-center justify-between">
-                <h1 className="text-[20px] font-bold text-foreground">
-                  Content Moderation
-                </h1>
-                <Badge className="bg-komo-badge/20 text-komo-blue border-komo-blue/30">
-                  {pendingPosts.length} pending
-                </Badge>
-              </div>
-
-              {pendingPosts.length === 0 ? (
-                <div
-                  data-ocid="admin.moderation.empty_state"
-                  className="text-center py-16 komo-surface rounded-2xl komo-card-shadow"
-                >
-                  <Check size={40} className="text-green-400 mx-auto mb-3" />
-                  <p className="text-foreground font-semibold">All clear!</p>
-                  <p className="text-komo-text-muted text-[13px] mt-1">
-                    No posts pending review
-                  </p>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  {pendingPosts.map((post, i) => (
-                    <motion.div
-                      key={post.id}
-                      data-ocid={`admin.moderation.item.${i + 1}`}
-                      className="komo-surface rounded-2xl komo-card-shadow p-4"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div
-                          className="w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0"
-                          style={{ background: post.gradient }}
-                        >
-                          {post.initials}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[13px] font-semibold text-foreground">
-                              {post.username}
-                            </span>
-                            <Badge className="text-[9px] bg-accent text-komo-text-muted border-0">
-                              {post.type}
-                            </Badge>
-                            <span className="text-[11px] text-komo-text-muted ml-auto">
-                              {post.time}
-                            </span>
-                          </div>
-                          <p className="text-[13px] text-komo-text-secondary">
-                            {post.caption}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex gap-2 mt-3">
-                        <Button
-                          data-ocid={`admin.moderation.approve.${i + 1}`}
-                          size="sm"
-                          className="flex-1 bg-green-500/15 text-green-400 hover:bg-green-500/25 border-0 text-[12px]"
-                          onClick={() => handleApprove(post.id)}
-                        >
-                          <Check size={13} className="mr-1" /> Approve
-                        </Button>
-                        <Button
-                          data-ocid={`admin.moderation.reject.${i + 1}`}
-                          size="sm"
-                          variant="destructive"
-                          className="flex-1 text-[12px] bg-destructive/15 text-destructive hover:bg-destructive/25 border-0"
-                          onClick={() => handleReject(post.id)}
-                        >
-                          <X size={13} className="mr-1" /> Reject
-                        </Button>
-                        <Button
-                          data-ocid={`admin.moderation.flag.${i + 1}`}
-                          size="sm"
-                          variant="ghost"
-                          className="text-yellow-400 hover:bg-yellow-400/10 text-[12px]"
-                        >
-                          <AlertTriangle size={13} className="mr-1" /> Flag
-                        </Button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </motion.div>
-          )}
+          {activeSection === "moderation" && <ModerationPanel />}
 
           {/* Marketplace */}
           {activeSection === "marketplace" && (

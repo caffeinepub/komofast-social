@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
+  Ban,
   Bookmark,
+  Flag,
   Flame,
   Grid,
   Heart,
@@ -25,6 +27,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import PostDetailModal from "../components/modals/PostDetailModal";
+import ReportModal from "../components/modals/ReportModal";
 import { useApp } from "../context/AppContext";
 import { AVATAR_GRADIENTS, MOCK_POSTS } from "../data/mockData";
 
@@ -109,9 +112,22 @@ function getTierInfo(pts: number) {
 }
 
 export default function Profile() {
-  const { currentPath, currentUser, logout } = useApp();
+  const {
+    currentPath,
+    currentUser,
+    logout,
+    navigate,
+    blockedUsers,
+    blockUser,
+    unblockUser,
+    bannedUsers,
+  } = useApp();
   const isOwnProfile = !currentPath.includes("userId");
+  const profileUsername = currentPath.includes("userId")
+    ? "other_user"
+    : currentUser?.username || "komofast_user";
   const [following, setFollowing] = useState(false);
+  const [reportUserOpen, setReportUserOpen] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
   const [activeTab, setActiveTab] = useState<"posts" | "saved" | "earning">(
     "posts",
@@ -210,8 +226,13 @@ export default function Profile() {
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-[18px] font-bold text-foreground">
+              <h1 className="text-[18px] font-bold text-foreground flex items-center gap-2">
                 {profile.displayName}
+                {bannedUsers.includes(profileUsername) && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
+                    BANNED
+                  </span>
+                )}
               </h1>
               {profile.isCreator && (
                 <Badge className="bg-komo-badge/20 text-komo-blue border-komo-blue/30 text-[10px]">
@@ -239,48 +260,89 @@ export default function Profile() {
           </div>
 
           {!isOwnProfile ? (
-            <div className="flex gap-2">
-              <Button
-                data-ocid="profile.follow.button"
-                size="sm"
-                className={
-                  following
-                    ? "bg-accent text-komo-text-secondary"
-                    : "komo-gradient border-0 text-white"
-                }
-                onClick={() => {
-                  setFollowing((f) => !f);
-                  toast.success(following ? "Unfollowed" : "Following!");
-                }}
-              >
-                {following ? (
-                  <UserMinus size={14} className="mr-1" />
-                ) : (
-                  <UserPlus size={14} className="mr-1" />
-                )}
-                {following ? "Unfollow" : "Follow"}
-              </Button>
-              {profile.isCreator && (
+            <div className="flex flex-col gap-2 items-end">
+              <div className="flex gap-2">
                 <Button
-                  data-ocid="profile.subscribe.button"
+                  data-ocid="profile.follow.button"
                   size="sm"
-                  variant={subscribed ? "secondary" : "outline"}
                   className={
-                    subscribed
-                      ? ""
-                      : "border-komo-purple text-komo-purple hover:bg-komo-purple/10"
+                    following
+                      ? "bg-accent text-komo-text-secondary"
+                      : "komo-gradient border-0 text-white"
                   }
                   onClick={() => {
-                    setSubscribed((s) => !s);
-                    toast.success(
-                      subscribed ? "Unsubscribed" : "Subscribed to creator!",
-                    );
+                    setFollowing((f) => !f);
+                    toast.success(following ? "Unfollowed" : "Following!");
                   }}
                 >
-                  <Star size={13} className="mr-1" />
-                  {subscribed ? "Subscribed" : "Subscribe"}
+                  {following ? (
+                    <UserMinus size={14} className="mr-1" />
+                  ) : (
+                    <UserPlus size={14} className="mr-1" />
+                  )}
+                  {following ? "Unfollow" : "Follow"}
                 </Button>
-              )}
+                {profile.isCreator && (
+                  <Button
+                    data-ocid="profile.subscribe.button"
+                    size="sm"
+                    variant={subscribed ? "secondary" : "outline"}
+                    className={
+                      subscribed
+                        ? ""
+                        : "border-komo-purple text-komo-purple hover:bg-komo-purple/10"
+                    }
+                    onClick={() => {
+                      setSubscribed((s) => !s);
+                      toast.success(
+                        subscribed ? "Unsubscribed" : "Subscribed to creator!",
+                      );
+                    }}
+                  >
+                    <Star size={13} className="mr-1" />
+                    {subscribed ? "Subscribed" : "Subscribe"}
+                  </Button>
+                )}
+              </div>
+              {/* Block & Report row */}
+              <div className="flex gap-2">
+                {blockedUsers.includes(profileUsername) ? (
+                  <Button
+                    data-ocid="profile.unblock.button"
+                    size="sm"
+                    variant="outline"
+                    className="border-green-700/50 text-green-400 hover:bg-green-900/20 text-[11px] h-7"
+                    onClick={() => {
+                      unblockUser(profileUsername);
+                      toast.success("User unblocked");
+                    }}
+                  >
+                    <Ban size={11} className="mr-1" /> Unblock
+                  </Button>
+                ) : (
+                  <Button
+                    data-ocid="profile.block.button"
+                    size="sm"
+                    variant="outline"
+                    className="border-red-800/50 text-red-400 hover:bg-red-900/20 text-[11px] h-7"
+                    onClick={() => {
+                      blockUser(profileUsername);
+                      toast.success(`@${profileUsername} blocked`);
+                    }}
+                  >
+                    <Ban size={11} className="mr-1" /> Block
+                  </Button>
+                )}
+                <Button
+                  data-ocid="profile.report.button"
+                  size="sm"
+                  variant="outline"
+                  className="border-orange-800/50 text-orange-400 hover:bg-orange-900/20 text-[11px] h-7"
+                  onClick={() => setReportUserOpen(true)}
+                >
+                  <Flag size={11} className="mr-1" /> Report
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="flex gap-2">
@@ -345,6 +407,46 @@ export default function Profile() {
             <p className="text-[11px] text-komo-text-muted">Honor Pts</p>
           </div>
         </div>
+
+        {/* Wallet shortcut */}
+        {isOwnProfile && (
+          <div
+            className="mt-4 p-3 rounded-xl flex items-center gap-3"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(47,168,255,0.08), rgba(168,85,247,0.12))",
+              border: "1px solid rgba(168,85,247,0.25)",
+            }}
+          >
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center text-[18px]"
+              style={{
+                background: "linear-gradient(135deg, #2fa8ff, #a855f7)",
+              }}
+            >
+              💳
+            </div>
+            <div className="flex-1">
+              <p className="text-[11px] text-komo-text-muted">My Wallet</p>
+              <div className="flex items-center gap-3 mt-0.5">
+                <span className="text-[14px] font-bold komo-gradient-text">
+                  ₹4,890
+                </span>
+                <span className="text-[11px] text-yellow-400 font-medium">
+                  🪙 2,450 Coins
+                </span>
+              </div>
+            </div>
+            <Button
+              data-ocid="profile.wallet.button"
+              size="sm"
+              className="komo-gradient border-0 text-white text-[11px] h-7 px-3"
+              onClick={() => navigate("/wallet")}
+            >
+              View Wallet
+            </Button>
+          </div>
+        )}
 
         {/* Creator earnings */}
         {isOwnProfile && profile.isCreator && (
@@ -677,6 +779,14 @@ export default function Profile() {
         post={selectedPost}
         open={!!selectedPost}
         onClose={() => setSelectedPost(null)}
+      />
+
+      <ReportModal
+        open={reportUserOpen}
+        onClose={() => setReportUserOpen(false)}
+        targetId={profileUsername}
+        targetUsername={profileUsername}
+        type="user"
       />
     </div>
   );

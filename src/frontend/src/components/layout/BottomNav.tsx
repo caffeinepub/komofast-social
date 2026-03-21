@@ -1,11 +1,11 @@
-import { Bell, Compass, Film, Home, User } from "lucide-react";
+import { Bell, Compass, Film, GraduationCap, Home, User } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 
 const NAV_ITEMS = [
   { label: "Home", icon: Home, path: "/" },
   { label: "Explore", icon: Compass, path: "/explore" },
   { label: "Reels", icon: Film, path: "/reels" },
-  { label: "Alerts", icon: Bell, path: "/notifications" },
+  { label: "Academy", icon: GraduationCap, path: "/academy" },
   { label: "Profile", icon: User, path: "/profile" },
 ];
 
@@ -23,6 +23,7 @@ export default function BottomNav() {
         {NAV_ITEMS.map((item) => {
           const active = isActive(item.path);
           const isReels = item.label === "Reels";
+          const isAcademy = item.label === "Academy";
 
           return (
             <button
@@ -38,9 +39,13 @@ export default function BottomNav() {
                     ? active
                       ? "text-purple-400"
                       : "text-komo-text-secondary"
-                    : active
-                      ? "text-komo-blue"
-                      : "text-komo-text-secondary"
+                    : isAcademy
+                      ? active
+                        ? "text-yellow-400"
+                        : "text-komo-text-secondary"
+                      : active
+                        ? "text-komo-blue"
+                        : "text-komo-text-secondary"
                 }`}
               >
                 {isReels ? (
@@ -72,14 +77,22 @@ export default function BottomNav() {
               {!isReels && (
                 <span
                   className={`text-[11px] font-medium ${
-                    active ? "text-komo-blue" : "text-komo-text-muted"
+                    isAcademy && active
+                      ? "text-yellow-400"
+                      : active
+                        ? "text-komo-blue"
+                        : "text-komo-text-muted"
                   }`}
                 >
                   {item.label}
                 </span>
               )}
               {active && !isReels && (
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-komo-blue" />
+                <span
+                  className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${
+                    isAcademy ? "bg-yellow-400" : "bg-komo-blue"
+                  }`}
+                />
               )}
             </button>
           );

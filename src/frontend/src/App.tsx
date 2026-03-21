@@ -17,6 +17,8 @@ const Marketplace = lazy(() => import("./pages/Marketplace"));
 const Cart = lazy(() => import("./pages/Cart"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Reels = lazy(() => import("./pages/Reels"));
+const Academy = lazy(() => import("./pages/Academy"));
+const WalletPage = lazy(() => import("./pages/Wallet"));
 
 function PageLoader() {
   return (
@@ -43,6 +45,8 @@ function Router() {
     if (currentPath === "/cart") return <Cart />;
     if (currentPath === "/admin") return <Admin />;
     if (currentPath === "/reels") return <Reels />;
+    if (currentPath === "/academy") return <Academy />;
+    if (currentPath === "/wallet") return <WalletPage />;
     return <Home />;
   };
 

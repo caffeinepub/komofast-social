@@ -8,14 +8,37 @@ import { useApp } from "../context/AppContext";
 const MOCK_OTP = "123456";
 const OTP_INDICES = [0, 1, 2, 3, 4, 5] as const;
 
+type PageMode = "login" | "register";
+type LoginStep = "phone" | "otp";
+type RegisterStep = "form" | "verify";
+type ContactType = "mobile" | "email";
+
 export default function Login() {
   const { login } = useApp();
-  const [step, setStep] = useState<"phone" | "otp">("phone");
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [loading, setLoading] = useState(false);
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  // Mode
+  const [mode, setMode] = useState<PageMode>("login");
+
+  // Login state
+  const [loginStep, setLoginStep] = useState<LoginStep>("phone");
+  const [phone, setPhone] = useState("");
+  const [loginOtp, setLoginOtp] = useState(["", "", "", "", "", ""]);
+  const loginOtpRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Register state
+  const [regStep, setRegStep] = useState<RegisterStep>("form");
+  const [regName, setRegName] = useState("");
+  const [contactType, setContactType] = useState<ContactType>("mobile");
+  const [regPhone, setRegPhone] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [regOtp, setRegOtp] = useState(["", "", "", "", "", ""]);
+  const regOtpRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const [loading, setLoading] = useState(false);
+
+  // --- Login handlers ---
   const handleSendOtp = () => {
     if (phone.length < 10) {
       toast.error("Please enter a valid 10-digit mobile number");
@@ -24,29 +47,40 @@ export default function Login() {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      setStep("otp");
+      setLoginStep("otp");
       toast.success("OTP sent successfully!");
     }, 1200);
   };
 
-  const handleOtpChange = (index: number, value: string) => {
+  const handleOtpChange = (
+    index: number,
+    value: string,
+    arr: string[],
+    setArr: (v: string[]) => void,
+    refs: React.MutableRefObject<(HTMLInputElement | null)[]>,
+  ) => {
     if (!/^[0-9]?$/.test(value)) return;
-    const next = [...otp];
+    const next = [...arr];
     next[index] = value;
-    setOtp(next);
+    setArr(next);
     if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus();
+      refs.current[index + 1]?.focus();
     }
   };
 
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
+  const handleOtpKeyDown = (
+    index: number,
+    e: React.KeyboardEvent,
+    arr: string[],
+    refs: React.MutableRefObject<(HTMLInputElement | null)[]>,
+  ) => {
+    if (e.key === "Backspace" && !arr[index] && index > 0) {
+      refs.current[index - 1]?.focus();
     }
   };
 
-  const handleVerify = () => {
-    const code = otp.join("");
+  const handleVerifyLogin = () => {
+    const code = loginOtp.join("");
     if (code.length < 6) {
       toast.error("Please enter the 6-digit OTP");
       return;
@@ -58,6 +92,120 @@ export default function Login() {
       toast.success("Login successful! Welcome to Komofast 🎉");
     }, 1000);
   };
+
+  // --- Register handlers ---
+  const handleSendVerificationCode = () => {
+    if (!regName.trim()) {
+      toast.error("Please enter your full name");
+      return;
+    }
+    if (contactType === "mobile" && regPhone.length < 10) {
+      toast.error("Please enter a valid 10-digit mobile number");
+      return;
+    }
+    if (contactType === "email" && !regEmail.includes("@")) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    if (regPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setRegStep("verify");
+      toast.success("Verification code sent!");
+    }, 1200);
+  };
+
+  const handleVerifyRegister = () => {
+    const code = regOtp.join("");
+    if (code.length < 6) {
+      toast.error("Please enter the 6-digit code");
+      return;
+    }
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      const contact = contactType === "mobile" ? `+91${regPhone}` : regEmail;
+      login(contact, regName.trim());
+      toast.success(`Welcome to Komofast, ${regName.split(" ")[0]}! 🎉`);
+    }, 1000);
+  };
+
+  const switchMode = (m: PageMode) => {
+    setMode(m);
+    setLoading(false);
+    // reset login
+    setLoginStep("phone");
+    setPhone("");
+    setLoginOtp(["", "", "", "", "", ""]);
+    // reset register
+    setRegStep("form");
+    setRegName("");
+    setRegPhone("");
+    setRegEmail("");
+    setRegPassword("");
+    setRegOtp(["", "", "", "", "", ""]);
+  };
+
+  // shared OTP box renderer
+  const renderOtpBoxes = (
+    arr: string[],
+    setArr: (v: string[]) => void,
+    refs: React.MutableRefObject<(HTMLInputElement | null)[]>,
+    ocidPrefix: string,
+  ) =>
+    OTP_INDICES.map((i) => (
+      <input
+        key={`otp-digit-${i}`}
+        data-ocid={`${ocidPrefix}.input`}
+        ref={(el) => {
+          refs.current[i] = el;
+        }}
+        type="text"
+        inputMode="numeric"
+        maxLength={1}
+        value={arr[i]}
+        onChange={(e) => handleOtpChange(i, e.target.value, arr, setArr, refs)}
+        onKeyDown={(e) => handleOtpKeyDown(i, e, arr, refs)}
+        className="w-12 h-14 rounded-xl text-center text-[22px] font-bold text-white outline-none transition-all"
+        style={{
+          background: arr[i]
+            ? "rgba(47,168,255,0.15)"
+            : "rgba(255,255,255,0.06)",
+          border: arr[i]
+            ? "1.5px solid rgba(47,168,255,0.6)"
+            : "1.5px solid rgba(255,255,255,0.12)",
+        }}
+      />
+    ));
+
+  const cardStyle: React.CSSProperties = {
+    background: "rgba(255,255,255,0.04)",
+    border: "1px solid rgba(255,255,255,0.09)",
+    backdropFilter: "blur(16px)",
+    boxShadow: "0 24px 64px rgba(0,0,0,0.5)",
+  };
+
+  const gradientBtn: React.CSSProperties = {
+    background: "linear-gradient(135deg, #2FA8FF 0%, #A855F7 100%)",
+    boxShadow: loading ? "none" : "0 4px 24px rgba(47,168,255,0.35)",
+  };
+
+  const mockHint = (
+    <div
+      className="mb-6 px-3 py-2 rounded-xl text-[12px] font-mono"
+      style={{
+        background: "rgba(168,85,247,0.12)",
+        border: "1px dashed rgba(168,85,247,0.35)",
+        color: "rgba(168,85,247,0.9)",
+      }}
+    >
+      🔐 Your code: <strong>{MOCK_OTP}</strong> (demo mode)
+    </div>
+  );
 
   return (
     <div
@@ -120,204 +268,447 @@ export default function Login() {
         </p>
       </motion.div>
 
-      {/* Card */}
+      {/* Card area */}
       <AnimatePresence mode="wait">
-        {step === "phone" ? (
-          <motion.div
-            key="phone"
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.35 }}
-            className="w-full max-w-sm rounded-2xl p-6"
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.09)",
-              backdropFilter: "blur(16px)",
-              boxShadow: "0 24px 64px rgba(0,0,0,0.5)",
-            }}
-          >
-            <h2 className="text-[20px] font-bold text-white mb-1">
-              Login with Mobile
-            </h2>
-            <p
-              className="text-[13px] mb-6"
-              style={{ color: "rgba(255,255,255,0.45)" }}
-            >
-              Enter your mobile number to receive OTP
-            </p>
-
-            <p className="text-[12px] font-semibold text-white/60 uppercase tracking-wider mb-2">
-              Mobile Number
-            </p>
-            <div className="flex gap-2 mb-5">
-              <div
-                className="flex items-center px-3 rounded-xl text-[15px] font-semibold text-white"
-                style={{
-                  background: "rgba(47,168,255,0.12)",
-                  border: "1px solid rgba(47,168,255,0.25)",
-                  minWidth: "52px",
-                }}
+        {mode === "login" ? (
+          // ===== LOGIN MODE =====
+          <AnimatePresence mode="wait" key="login-mode">
+            {loginStep === "phone" ? (
+              <motion.div
+                key="login-phone"
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.35 }}
+                className="w-full max-w-sm rounded-2xl p-6"
+                style={cardStyle}
               >
-                +91
-              </div>
-              <Input
-                id="phone-input"
-                data-ocid="login.input"
-                type="tel"
-                inputMode="numeric"
-                maxLength={10}
-                placeholder="Enter 10-digit number"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-                onKeyDown={(e) => e.key === "Enter" && handleSendOtp()}
-                className="flex-1 rounded-xl text-[15px] text-white placeholder:text-white/25"
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  height: "48px",
-                }}
-              />
-            </div>
+                <h2 className="text-[20px] font-bold text-white mb-1">
+                  Login with Mobile
+                </h2>
+                <p
+                  className="text-[13px] mb-6"
+                  style={{ color: "rgba(255,255,255,0.45)" }}
+                >
+                  Enter your mobile number to receive OTP
+                </p>
 
-            <Button
-              data-ocid="login.primary_button"
-              className="w-full h-12 rounded-xl text-[15px] font-bold text-white border-0"
-              style={{
-                background: "linear-gradient(135deg, #2FA8FF 0%, #A855F7 100%)",
-                boxShadow: loading
-                  ? "none"
-                  : "0 4px 24px rgba(47,168,255,0.35)",
-              }}
-              onClick={handleSendOtp}
-              disabled={loading}
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                  Sending OTP...
-                </span>
-              ) : (
-                "Send OTP →"
-              )}
-            </Button>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="otp"
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.35 }}
-            className="w-full max-w-sm rounded-2xl p-6"
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.09)",
-              backdropFilter: "blur(16px)",
-              boxShadow: "0 24px 64px rgba(0,0,0,0.5)",
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => {
-                setStep("phone");
-                setOtp(["", "", "", "", "", ""]);
-              }}
-              className="text-[13px] mb-4 flex items-center gap-1"
-              style={{ color: "rgba(47,168,255,0.8)" }}
-            >
-              ← Back
-            </button>
+                <p className="text-[12px] font-semibold text-white/60 uppercase tracking-wider mb-2">
+                  Mobile Number
+                </p>
+                <div className="flex gap-2 mb-5">
+                  <div
+                    className="flex items-center px-3 rounded-xl text-[15px] font-semibold text-white"
+                    style={{
+                      background: "rgba(47,168,255,0.12)",
+                      border: "1px solid rgba(47,168,255,0.25)",
+                      minWidth: "52px",
+                    }}
+                  >
+                    +91
+                  </div>
+                  <Input
+                    data-ocid="login.input"
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="Enter 10-digit number"
+                    value={phone}
+                    onChange={(e) =>
+                      setPhone(e.target.value.replace(/\D/g, ""))
+                    }
+                    onKeyDown={(e) => e.key === "Enter" && handleSendOtp()}
+                    className="flex-1 rounded-xl text-[15px] text-white placeholder:text-white/25"
+                    style={{
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.12)",
+                      height: "48px",
+                    }}
+                  />
+                </div>
 
-            <h2 className="text-[20px] font-bold text-white mb-1">
-              Verify OTP
-            </h2>
-            <p
-              className="text-[13px] mb-1"
-              style={{ color: "rgba(255,255,255,0.45)" }}
-            >
-              Sent to +91 {phone}
-            </p>
+                <Button
+                  data-ocid="login.primary_button"
+                  className="w-full h-12 rounded-xl text-[15px] font-bold text-white border-0"
+                  style={gradientBtn}
+                  onClick={handleSendOtp}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                      Sending OTP...
+                    </span>
+                  ) : (
+                    "Send OTP →"
+                  )}
+                </Button>
 
-            {/* Mock OTP hint */}
-            <div
-              className="mb-6 px-3 py-2 rounded-xl text-[12px] font-mono"
-              style={{
-                background: "rgba(168,85,247,0.12)",
-                border: "1px dashed rgba(168,85,247,0.35)",
-                color: "rgba(168,85,247,0.9)",
-              }}
-            >
-              🔐 Your OTP: <strong>{MOCK_OTP}</strong> (demo mode)
-            </div>
-
-            <p className="text-[12px] font-semibold text-white/60 uppercase tracking-wider mb-3">
-              Enter 6-digit OTP
-            </p>
-
-            <div className="flex gap-2 justify-between mb-5">
-              {OTP_INDICES.map((i) => (
-                <input
-                  key={`otp-digit-${i}`}
-                  data-ocid="login.input"
-                  ref={(el) => {
-                    inputRefs.current[i] = el;
+                <p
+                  className="text-center text-[13px] mt-5"
+                  style={{ color: "rgba(255,255,255,0.4)" }}
+                >
+                  Don&apos;t have an account?{" "}
+                  <button
+                    type="button"
+                    data-ocid="login.register_link"
+                    onClick={() => switchMode("register")}
+                    className="font-semibold"
+                    style={{ color: "rgba(168,85,247,0.9)" }}
+                  >
+                    Create New Account
+                  </button>
+                </p>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="login-otp"
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.35 }}
+                className="w-full max-w-sm rounded-2xl p-6"
+                style={cardStyle}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoginStep("phone");
+                    setLoginOtp(["", "", "", "", "", ""]);
                   }}
+                  className="text-[13px] mb-4 flex items-center gap-1"
+                  style={{ color: "rgba(47,168,255,0.8)" }}
+                >
+                  ← Back
+                </button>
+
+                <h2 className="text-[20px] font-bold text-white mb-1">
+                  Verify OTP
+                </h2>
+                <p
+                  className="text-[13px] mb-1"
+                  style={{ color: "rgba(255,255,255,0.45)" }}
+                >
+                  Sent to +91 {phone}
+                </p>
+
+                {mockHint}
+
+                <p className="text-[12px] font-semibold text-white/60 uppercase tracking-wider mb-3">
+                  Enter 6-digit OTP
+                </p>
+
+                <div className="flex gap-2 justify-between mb-5">
+                  {renderOtpBoxes(loginOtp, setLoginOtp, loginOtpRefs, "login")}
+                </div>
+
+                <Button
+                  data-ocid="login.submit_button"
+                  className="w-full h-12 rounded-xl text-[15px] font-bold text-white border-0"
+                  style={gradientBtn}
+                  onClick={handleVerifyLogin}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                      Verifying...
+                    </span>
+                  ) : (
+                    "Verify & Login ✓"
+                  )}
+                </Button>
+
+                <p
+                  className="text-center text-[12px] mt-4"
+                  style={{ color: "rgba(255,255,255,0.3)" }}
+                >
+                  Didn&apos;t receive OTP?{" "}
+                  <button
+                    type="button"
+                    onClick={() => toast.info("OTP resent! (demo mode)")}
+                    style={{ color: "rgba(47,168,255,0.7)" }}
+                  >
+                    Resend
+                  </button>
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        ) : (
+          // ===== REGISTER MODE =====
+          <AnimatePresence mode="wait" key="register-mode">
+            {regStep === "form" ? (
+              <motion.div
+                key="reg-form"
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.35 }}
+                className="w-full max-w-sm rounded-2xl p-6"
+                style={cardStyle}
+              >
+                <h2 className="text-[20px] font-bold text-white mb-1">
+                  Create Account
+                </h2>
+                <p
+                  className="text-[13px] mb-6"
+                  style={{ color: "rgba(255,255,255,0.45)" }}
+                >
+                  Join Komofast Social today
+                </p>
+
+                {/* Full Name */}
+                <p className="text-[12px] font-semibold text-white/60 uppercase tracking-wider mb-2">
+                  Full Name
+                </p>
+                <Input
+                  data-ocid="register.input"
                   type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={otp[i]}
-                  onChange={(e) => handleOtpChange(i, e.target.value)}
-                  onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                  className="w-12 h-14 rounded-xl text-center text-[22px] font-bold text-white outline-none transition-all"
+                  placeholder="Enter your full name"
+                  value={regName}
+                  onChange={(e) => setRegName(e.target.value)}
+                  className="w-full rounded-xl text-[15px] text-white placeholder:text-white/25 mb-4"
                   style={{
-                    background: otp[i]
-                      ? "rgba(47,168,255,0.15)"
-                      : "rgba(255,255,255,0.06)",
-                    border: otp[i]
-                      ? "1.5px solid rgba(47,168,255,0.6)"
-                      : "1.5px solid rgba(255,255,255,0.12)",
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    height: "48px",
                   }}
                 />
-              ))}
-            </div>
 
-            <Button
-              data-ocid="login.submit_button"
-              className="w-full h-12 rounded-xl text-[15px] font-bold text-white border-0"
-              style={{
-                background: "linear-gradient(135deg, #2FA8FF 0%, #A855F7 100%)",
-                boxShadow: loading
-                  ? "none"
-                  : "0 4px 24px rgba(47,168,255,0.35)",
-              }}
-              onClick={handleVerify}
-              disabled={loading}
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                  Verifying...
-                </span>
-              ) : (
-                "Verify & Login ✓"
-              )}
-            </Button>
+                {/* Contact type toggle */}
+                <p className="text-[12px] font-semibold text-white/60 uppercase tracking-wider mb-2">
+                  Contact
+                </p>
+                <div
+                  className="flex gap-1 p-1 rounded-xl mb-3"
+                  style={{ background: "rgba(255,255,255,0.06)" }}
+                >
+                  {(["mobile", "email"] as ContactType[]).map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      data-ocid={`register.${t}_tab`}
+                      onClick={() => setContactType(t)}
+                      className="flex-1 py-2 rounded-lg text-[13px] font-semibold capitalize transition-all"
+                      style={{
+                        background:
+                          contactType === t
+                            ? "linear-gradient(135deg, #2FA8FF 0%, #A855F7 100%)"
+                            : "transparent",
+                        color:
+                          contactType === t ? "#fff" : "rgba(255,255,255,0.45)",
+                      }}
+                    >
+                      {t === "mobile" ? "📱 Mobile" : "✉️ Email"}
+                    </button>
+                  ))}
+                </div>
 
-            <p
-              className="text-center text-[12px] mt-4"
-              style={{ color: "rgba(255,255,255,0.3)" }}
-            >
-              Didn't receive OTP?{" "}
-              <button
-                type="button"
-                onClick={() => toast.info("OTP resent! (demo mode)")}
-                style={{ color: "rgba(47,168,255,0.7)" }}
+                {/* Contact input */}
+                <AnimatePresence mode="wait">
+                  {contactType === "mobile" ? (
+                    <motion.div
+                      key="contact-mobile"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 10 }}
+                      transition={{ duration: 0.2 }}
+                      className="flex gap-2 mb-4"
+                    >
+                      <div
+                        className="flex items-center px-3 rounded-xl text-[15px] font-semibold text-white"
+                        style={{
+                          background: "rgba(47,168,255,0.12)",
+                          border: "1px solid rgba(47,168,255,0.25)",
+                          minWidth: "52px",
+                        }}
+                      >
+                        +91
+                      </div>
+                      <Input
+                        data-ocid="register.input"
+                        type="tel"
+                        inputMode="numeric"
+                        maxLength={10}
+                        placeholder="Enter 10-digit number"
+                        value={regPhone}
+                        onChange={(e) =>
+                          setRegPhone(e.target.value.replace(/\D/g, ""))
+                        }
+                        className="flex-1 rounded-xl text-[15px] text-white placeholder:text-white/25"
+                        style={{
+                          background: "rgba(255,255,255,0.06)",
+                          border: "1px solid rgba(255,255,255,0.12)",
+                          height: "48px",
+                        }}
+                      />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="contact-email"
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="mb-4"
+                    >
+                      <Input
+                        data-ocid="register.input"
+                        type="email"
+                        placeholder="Enter your email address"
+                        value={regEmail}
+                        onChange={(e) => setRegEmail(e.target.value)}
+                        className="w-full rounded-xl text-[15px] text-white placeholder:text-white/25"
+                        style={{
+                          background: "rgba(255,255,255,0.06)",
+                          border: "1px solid rgba(255,255,255,0.12)",
+                          height: "48px",
+                        }}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Password */}
+                <p className="text-[12px] font-semibold text-white/60 uppercase tracking-wider mb-2">
+                  Password
+                </p>
+                <div className="relative mb-5">
+                  <Input
+                    data-ocid="register.input"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Create a password (min 6 chars)"
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
+                    className="w-full rounded-xl text-[15px] text-white placeholder:text-white/25 pr-12"
+                    style={{
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.12)",
+                      height: "48px",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    data-ocid="register.toggle"
+                    onClick={() => setShowPassword((p) => !p)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[18px] opacity-60 hover:opacity-100 transition-opacity"
+                  >
+                    {showPassword ? "🙈" : "👁️"}
+                  </button>
+                </div>
+
+                <Button
+                  data-ocid="register.primary_button"
+                  className="w-full h-12 rounded-xl text-[15px] font-bold text-white border-0"
+                  style={gradientBtn}
+                  onClick={handleSendVerificationCode}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                      Sending Code...
+                    </span>
+                  ) : (
+                    "Send Verification Code →"
+                  )}
+                </Button>
+
+                <p
+                  className="text-center text-[13px] mt-5"
+                  style={{ color: "rgba(255,255,255,0.4)" }}
+                >
+                  Already have an account?{" "}
+                  <button
+                    type="button"
+                    data-ocid="register.login_link"
+                    onClick={() => switchMode("login")}
+                    className="font-semibold"
+                    style={{ color: "rgba(47,168,255,0.8)" }}
+                  >
+                    Login
+                  </button>
+                </p>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="reg-verify"
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.35 }}
+                className="w-full max-w-sm rounded-2xl p-6"
+                style={cardStyle}
               >
-                Resend
-              </button>
-            </p>
-          </motion.div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRegStep("form");
+                    setRegOtp(["", "", "", "", "", ""]);
+                  }}
+                  className="text-[13px] mb-4 flex items-center gap-1"
+                  style={{ color: "rgba(47,168,255,0.8)" }}
+                >
+                  ← Back
+                </button>
+
+                <h2 className="text-[20px] font-bold text-white mb-1">
+                  Verify Your Account
+                </h2>
+                <p
+                  className="text-[13px] mb-1"
+                  style={{ color: "rgba(255,255,255,0.45)" }}
+                >
+                  Code sent to{" "}
+                  <span className="text-white font-semibold">
+                    {contactType === "mobile" ? `+91 ${regPhone}` : regEmail}
+                  </span>
+                </p>
+
+                <div className="my-4">{mockHint}</div>
+
+                <p className="text-[12px] font-semibold text-white/60 uppercase tracking-wider mb-3">
+                  Enter 6-digit Code
+                </p>
+
+                <div className="flex gap-2 justify-between mb-5">
+                  {renderOtpBoxes(regOtp, setRegOtp, regOtpRefs, "register")}
+                </div>
+
+                <Button
+                  data-ocid="register.submit_button"
+                  className="w-full h-12 rounded-xl text-[15px] font-bold text-white border-0"
+                  style={gradientBtn}
+                  onClick={handleVerifyRegister}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                      Creating Account...
+                    </span>
+                  ) : (
+                    "Verify & Create Account ✓"
+                  )}
+                </Button>
+
+                <p
+                  className="text-center text-[12px] mt-4"
+                  style={{ color: "rgba(255,255,255,0.3)" }}
+                >
+                  Didn&apos;t receive the code?{" "}
+                  <button
+                    type="button"
+                    onClick={() => toast.info("Code resent! (demo mode)")}
+                    style={{ color: "rgba(47,168,255,0.7)" }}
+                  >
+                    Resend
+                  </button>
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         )}
       </AnimatePresence>
 

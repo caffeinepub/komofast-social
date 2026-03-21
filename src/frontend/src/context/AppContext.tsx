@@ -8,6 +8,18 @@ import {
 import type { UserProfile, UserRole } from "../backend.d";
 import { useActor } from "../hooks/useActor";
 
+export type ReportedItem = {
+  id: string;
+  type: "post" | "user";
+  targetId: string;
+  targetUsername: string;
+  category: "fake_news" | "adult_content" | "hate_speech" | "spam" | "other";
+  description?: string;
+  reportedBy: string;
+  timestamp: Date;
+  status: "pending" | "removed" | "dismissed";
+};
+
 interface AppContextValue {
   currentUser: UserProfile | null;
   setCurrentUser: (u: UserProfile | null) => void;
@@ -29,8 +41,21 @@ interface AppContextValue {
   setCameraReelOpen: (v: boolean) => void;
   setCreatePostInitialType: (v: "post" | "reel") => void;
   isLoggedIn: boolean;
-  login: (phone: string) => void;
+  login: (phone: string, name?: string) => void;
   logout: () => void;
+  // Moderation
+  blockedUsers: string[];
+  reportedItems: ReportedItem[];
+  bannedUsers: string[];
+  blockUser: (username: string) => void;
+  unblockUser: (username: string) => void;
+  reportItem: (item: ReportedItem) => void;
+  banUser: (username: string) => void;
+  unbanUser: (username: string) => void;
+  updateReportStatus: (
+    id: string,
+    status: "pending" | "removed" | "dismissed",
+  ) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -57,6 +82,57 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [mockPhone, setMockPhone] = useState(() => {
     return localStorage.getItem("komo_phone") || "";
   });
+
+  // Moderation state
+  const [blockedUsers, setBlockedUsers] = useState<string[]>([]);
+  const [bannedUsers, setBannedUsers] = useState<string[]>([]);
+  const [reportedItems, setReportedItems] = useState<ReportedItem[]>([
+    {
+      id: "r1",
+      type: "post",
+      targetId: "post_123",
+      targetUsername: "fake_news_spreader",
+      category: "fake_news",
+      description: "This post contains misinformation about health topics.",
+      reportedBy: "komofast_user",
+      timestamp: new Date(Date.now() - 1000 * 60 * 30),
+      status: "pending",
+    },
+    {
+      id: "r2",
+      type: "post",
+      targetId: "post_456",
+      targetUsername: "spammer99",
+      category: "adult_content",
+      description: "Post contains inappropriate adult content.",
+      reportedBy: "travel_riya",
+      timestamp: new Date(Date.now() - 1000 * 60 * 90),
+      status: "pending",
+    },
+    {
+      id: "r3",
+      type: "user",
+      targetId: "hateful_user",
+      targetUsername: "hateful_user",
+      category: "hate_speech",
+      description:
+        "User consistently posts hateful comments targeting communities.",
+      reportedBy: "alex_creates",
+      timestamp: new Date(Date.now() - 1000 * 60 * 180),
+      status: "pending",
+    },
+    {
+      id: "r4",
+      type: "post",
+      targetId: "post_789",
+      targetUsername: "spambot_01",
+      category: "spam",
+      description: "Repeated promotional spam posts.",
+      reportedBy: "nova_beats",
+      timestamp: new Date(Date.now() - 1000 * 60 * 300),
+      status: "pending",
+    },
+  ]);
 
   const { actor, isFetching } = useActor();
 
@@ -104,10 +180,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isLoggedIn && mockPhone && !currentUser) {
       const username = mockPhone.replace("+91", "");
+      const storedName = localStorage.getItem("komo_name");
       setCurrentUser({
         id: "mock_user",
         username: `user_${username.slice(-4)}`,
-        displayName: `User ${username.slice(-4)}`,
+        displayName: storedName || `User ${username.slice(-4)}`,
         bio: "New to Komofast Social!",
         isCreator: false,
         profilePicture: [],
@@ -119,7 +196,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [isLoggedIn, mockPhone, currentUser]);
 
-  const login = (phone: string) => {
+  const login = (phone: string, name?: string) => {
+    if (name) {
+      localStorage.setItem("komo_name", name);
+    }
     localStorage.setItem("komo_logged_in", "true");
     localStorage.setItem("komo_phone", phone);
     setMockPhone(phone);
@@ -129,6 +209,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     localStorage.removeItem("komo_logged_in");
     localStorage.removeItem("komo_phone");
+    localStorage.removeItem("komo_name");
     setIsLoggedIn(false);
     setMockPhone("");
     setCurrentUser(null);
@@ -144,6 +225,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCurrentPath(to);
     setCurrentParams(params || {});
     window.scrollTo(0, 0);
+  };
+
+  const blockUser = (username: string) => {
+    setBlockedUsers((prev) =>
+      prev.includes(username) ? prev : [...prev, username],
+    );
+  };
+
+  const unblockUser = (username: string) => {
+    setBlockedUsers((prev) => prev.filter((u) => u !== username));
+  };
+
+  const reportItem = (item: ReportedItem) => {
+    setReportedItems((prev) => [...prev, item]);
+  };
+
+  const banUser = (username: string) => {
+    setBannedUsers((prev) =>
+      prev.includes(username) ? prev : [...prev, username],
+    );
+  };
+
+  const unbanUser = (username: string) => {
+    setBannedUsers((prev) => prev.filter((u) => u !== username));
+  };
+
+  const updateReportStatus = (
+    id: string,
+    status: "pending" | "removed" | "dismissed",
+  ) => {
+    setReportedItems((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, status } : r)),
+    );
   };
 
   return (
@@ -171,6 +285,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         isLoggedIn,
         login,
         logout,
+        blockedUsers,
+        reportedItems,
+        bannedUsers,
+        blockUser,
+        unblockUser,
+        reportItem,
+        banUser,
+        unbanUser,
+        updateReportStatus,
       }}
     >
       {children}
