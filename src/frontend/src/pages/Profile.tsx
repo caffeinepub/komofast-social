@@ -573,6 +573,42 @@ export default function Profile() {
             transition={{ duration: 0.25 }}
             className="mt-4 space-y-4 pb-8"
           >
+            {/* Creator Studio Card */}
+            <div
+              className="rounded-2xl p-4 flex items-center gap-4"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(47,168,255,0.12), rgba(168,85,247,0.18))",
+                border: "1px solid rgba(168,85,247,0.3)",
+                boxShadow: "0 4px 16px rgba(168,85,247,0.12)",
+              }}
+            >
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center text-[22px] flex-shrink-0"
+                style={{
+                  background: "linear-gradient(135deg, #2fa8ff, #a855f7)",
+                }}
+              >
+                🚀
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-bold text-foreground">
+                  Creator Studio
+                </p>
+                <p className="text-[12px] text-komo-text-muted leading-snug mt-0.5">
+                  Track earnings, check monetization eligibility
+                </p>
+              </div>
+              <Button
+                data-ocid="profile.creator_studio.primary_button"
+                size="sm"
+                className="komo-gradient border-0 text-white text-[12px] h-8 px-3 flex-shrink-0"
+                onClick={() => navigate("/creator")}
+              >
+                Open
+              </Button>
+            </div>
+
             {/* Honor Tier Card */}
             <div
               className="rounded-2xl p-5 relative overflow-hidden"

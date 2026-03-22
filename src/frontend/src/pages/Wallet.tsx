@@ -6,6 +6,7 @@ import {
   Coins,
   CreditCard,
   Gift,
+  Tag,
   TrendingUp,
   Wallet,
   X,
@@ -78,16 +79,67 @@ const TRANSACTIONS = [
   },
 ];
 
+type PromoResult =
+  | {
+      status: "success";
+      message: string;
+      type: "balance" | "coins" | "info";
+      value?: number;
+    }
+  | { status: "error"; message: string };
+
+function applyPromoCode(code: string): PromoResult {
+  switch (code.trim().toUpperCase()) {
+    case "KOMO10":
+      return {
+        status: "success",
+        message: "₹100 cashback added to your balance!",
+        type: "balance",
+        value: 100,
+      };
+    case "WELCOME50":
+      return {
+        status: "success",
+        message: "₹500 cashback added to your balance!",
+        type: "balance",
+        value: 500,
+      };
+    case "COINS100":
+      return {
+        status: "success",
+        message: "100 KomoCoins added to your wallet!",
+        type: "coins",
+        value: 100,
+      };
+    case "ACADEMY":
+      return {
+        status: "success",
+        message: "20% off on Academy subscription! Use at checkout.",
+        type: "info",
+      };
+    default:
+      return {
+        status: "error",
+        message: "Invalid promo code. Please check and try again.",
+      };
+  }
+}
+
 export default function WalletPage() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [showPromoModal, setShowPromoModal] = useState(false);
   const [withdrawMethod, setWithdrawMethod] = useState<"upi" | "bank">("upi");
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [upiId, setUpiId] = useState("");
   const [withdrawSuccess, setWithdrawSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState<"all" | "credit" | "debit">("all");
 
-  const balance = 4890;
-  const coins = 2450;
+  const [balance, setBalance] = useState(4890);
+  const [coins, setCoins] = useState(2450);
+
+  const [promoCode, setPromoCode] = useState("");
+  const [promoResult, setPromoResult] = useState<PromoResult | null>(null);
+  const [promoApplied, setPromoApplied] = useState(false);
 
   const filteredTxns = TRANSACTIONS.filter(
     (t) => activeTab === "all" || t.type === activeTab,
@@ -101,6 +153,27 @@ export default function WalletPage() {
       setWithdrawAmount("");
       setUpiId("");
     }, 2000);
+  };
+
+  const handleApplyPromo = () => {
+    if (!promoCode.trim()) return;
+    const result = applyPromoCode(promoCode);
+    setPromoResult(result);
+    if (result.status === "success") {
+      setPromoApplied(true);
+      if (result.type === "balance" && result.value) {
+        setBalance((prev) => prev + result.value!);
+      } else if (result.type === "coins" && result.value) {
+        setCoins((prev) => prev + result.value!);
+      }
+    }
+  };
+
+  const handleClosePromo = () => {
+    setShowPromoModal(false);
+    setPromoCode("");
+    setPromoResult(null);
+    setPromoApplied(false);
   };
 
   return (
@@ -141,6 +214,7 @@ export default function WalletPage() {
       <div className="grid grid-cols-3 gap-3 mb-5">
         <button
           type="button"
+          data-ocid="wallet.withdraw_button"
           onClick={() => setShowWithdrawModal(true)}
           className="bg-white/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-white/10 hover:bg-white/10 transition-all"
         >
@@ -151,6 +225,7 @@ export default function WalletPage() {
         </button>
         <button
           type="button"
+          data-ocid="wallet.secondary_button"
           className="bg-white/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-white/10"
         >
           <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
@@ -160,7 +235,9 @@ export default function WalletPage() {
         </button>
         <button
           type="button"
-          className="bg-white/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-white/10"
+          data-ocid="wallet.promo_button"
+          onClick={() => setShowPromoModal(true)}
+          className="bg-white/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-white/10 hover:bg-white/10 transition-all"
         >
           <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
             <Gift size={18} className="text-yellow-400" />
@@ -213,6 +290,7 @@ export default function WalletPage() {
               <button
                 type="button"
                 key={tab}
+                data-ocid={`wallet.${tab}.tab`}
                 onClick={() => setActiveTab(tab)}
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                   activeTab === tab
@@ -226,9 +304,10 @@ export default function WalletPage() {
           </div>
         </div>
         <div className="space-y-2">
-          {filteredTxns.map((txn) => (
+          {filteredTxns.map((txn, idx) => (
             <div
               key={txn.id}
+              data-ocid={`wallet.transaction.item.${idx + 1}`}
               className="bg-white/5 rounded-xl p-3 border border-white/10 flex items-center gap-3"
             >
               <div
@@ -269,6 +348,152 @@ export default function WalletPage() {
         </div>
       </div>
 
+      {/* Promo Code Modal */}
+      {showPromoModal && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-end justify-center p-4">
+          <div
+            data-ocid="wallet.promo.modal"
+            className="bg-[#1A1F2B] rounded-3xl w-full max-w-md p-6"
+          >
+            {promoApplied && promoResult?.status === "success" ? (
+              <div className="text-center py-6">
+                <div
+                  className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
+                    promoResult.type === "info"
+                      ? "bg-blue-500/20"
+                      : "bg-green-500/20"
+                  }`}
+                >
+                  {promoResult.type === "info" ? (
+                    <Tag size={32} className="text-blue-400" />
+                  ) : (
+                    <Check size={32} className="text-green-400" />
+                  )}
+                </div>
+                <div
+                  className={`font-bold text-lg mb-2 ${
+                    promoResult.type === "info"
+                      ? "text-blue-400"
+                      : "text-green-400"
+                  }`}
+                >
+                  {promoResult.type === "info"
+                    ? "Promo Saved!"
+                    : "Cashback Added!"}
+                </div>
+                <div className="text-gray-300 text-sm mb-6">
+                  {promoResult.message}
+                </div>
+                <button
+                  type="button"
+                  data-ocid="wallet.promo.close_button"
+                  onClick={handleClosePromo}
+                  className="w-full py-3 rounded-2xl font-bold text-white"
+                  style={{
+                    background: "linear-gradient(135deg, #7C3AED, #2563EB)",
+                  }}
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                      <Tag size={16} className="text-yellow-400" />
+                    </div>
+                    <span className="text-white font-bold text-lg">
+                      Promo Code
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    data-ocid="wallet.promo.close_button"
+                    onClick={handleClosePromo}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <p className="text-gray-400 text-sm mb-5">
+                  Enter a promo code to get cashback, coins, or discounts.
+                </p>
+
+                <div className="mb-3">
+                  <label
+                    htmlFor="promo-input"
+                    className="text-gray-400 text-xs mb-2 block"
+                  >
+                    Promo Code
+                  </label>
+                  <input
+                    id="promo-input"
+                    data-ocid="wallet.promo.input"
+                    type="text"
+                    value={promoCode}
+                    onChange={(e) => {
+                      setPromoCode(e.target.value.toUpperCase());
+                      setPromoResult(null);
+                    }}
+                    onKeyDown={(e) => e.key === "Enter" && handleApplyPromo()}
+                    placeholder="e.g. KOMO10"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 uppercase tracking-widest font-mono"
+                  />
+                </div>
+
+                {promoResult?.status === "error" && (
+                  <div
+                    data-ocid="wallet.promo.error_state"
+                    className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2 mb-3"
+                  >
+                    <X size={14} />
+                    {promoResult.message}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  data-ocid="wallet.promo.submit_button"
+                  onClick={handleApplyPromo}
+                  disabled={!promoCode.trim()}
+                  className="w-full py-3 rounded-2xl font-bold text-white disabled:opacity-40 transition-all"
+                  style={{
+                    background: "linear-gradient(135deg, #7C3AED, #2563EB)",
+                  }}
+                >
+                  Apply Code
+                </button>
+
+                <div className="mt-4 p-3 bg-white/5 rounded-xl border border-white/10">
+                  <div className="text-gray-500 text-xs font-semibold mb-2 uppercase tracking-wider">
+                    Try these codes
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {["KOMO10", "WELCOME50", "COINS100", "ACADEMY"].map(
+                      (code) => (
+                        <button
+                          type="button"
+                          key={code}
+                          onClick={() => {
+                            setPromoCode(code);
+                            setPromoResult(null);
+                          }}
+                          className="px-3 py-1 rounded-lg bg-purple-600/20 border border-purple-600/30 text-purple-300 text-xs font-mono font-semibold hover:bg-purple-600/30 transition-all"
+                        >
+                          {code}
+                        </button>
+                      ),
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Withdraw Modal */}
       {showWithdrawModal && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-end justify-center p-4">
@@ -293,6 +518,7 @@ export default function WalletPage() {
                   </span>
                   <button
                     type="button"
+                    data-ocid="wallet.withdraw.close_button"
                     onClick={() => setShowWithdrawModal(false)}
                     className="text-gray-400"
                   >
@@ -335,6 +561,7 @@ export default function WalletPage() {
                     </label>
                     <input
                       id="withdraw-amount"
+                      data-ocid="wallet.withdraw.input"
                       type="number"
                       value={withdrawAmount}
                       onChange={(e) => setWithdrawAmount(e.target.value)}
@@ -382,6 +609,7 @@ export default function WalletPage() {
 
                 <button
                   type="button"
+                  data-ocid="wallet.withdraw.submit_button"
                   onClick={handleWithdraw}
                   disabled={!withdrawAmount || Number(withdrawAmount) < 500}
                   className="w-full py-3 rounded-2xl font-bold text-white disabled:opacity-40 transition-all"

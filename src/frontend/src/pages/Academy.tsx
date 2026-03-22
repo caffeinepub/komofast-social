@@ -10,6 +10,7 @@ import {
   Lock,
   Play,
   Star,
+  Tag,
   TrendingUp,
   Users,
   X,
@@ -107,6 +108,11 @@ const CATEGORIES = [
   "Creative",
 ];
 
+const MONTHLY_PRICE = 199;
+const YEARLY_PRICE = 999;
+const MONTHLY_DISCOUNTED = 159;
+const YEARLY_DISCOUNTED = 799;
+
 export default function Academy() {
   const [activeTab, setActiveTab] = useState<"browse" | "mylearning" | "teach">(
     "browse",
@@ -122,10 +128,37 @@ export default function Academy() {
   );
   const [payoutRequested, setPayoutRequested] = useState(false);
 
+  // Subscription promo code state
+  const [subPromoCode, setSubPromoCode] = useState("");
+  const [subPromoApplied, setSubPromoApplied] = useState(false);
+  const [subPromoError, setSubPromoError] = useState("");
+
   const filteredCourses = COURSES.filter(
     (c) => selectedCategory === "All" || c.category === selectedCategory,
   );
   const myCourses = COURSES.filter((c) => c.enrolled);
+
+  const monthlyPrice = subPromoApplied ? MONTHLY_DISCOUNTED : MONTHLY_PRICE;
+  const yearlyPrice = subPromoApplied ? YEARLY_DISCOUNTED : YEARLY_PRICE;
+  const currentPrice = selectedPlan === "monthly" ? monthlyPrice : yearlyPrice;
+
+  const handleApplySubPromo = () => {
+    const code = subPromoCode.trim().toUpperCase();
+    if (code === "ACADEMY") {
+      setSubPromoApplied(true);
+      setSubPromoError("");
+    } else {
+      setSubPromoError("Invalid promo code");
+      setSubPromoApplied(false);
+    }
+  };
+
+  const handleCloseSubscriptionModal = () => {
+    setShowSubscriptionModal(false);
+    setSubPromoCode("");
+    setSubPromoApplied(false);
+    setSubPromoError("");
+  };
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-4">
@@ -166,6 +199,7 @@ export default function Academy() {
           <button
             type="button"
             key={tab}
+            data-ocid={`academy.${tab}.tab`}
             onClick={() => setActiveTab(tab)}
             className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all ${
               activeTab === tab
@@ -185,7 +219,6 @@ export default function Academy() {
       {/* Browse Tab */}
       {activeTab === "browse" && (
         <div>
-          {/* Category filter */}
           <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
             {CATEGORIES.map((cat) => (
               <button
@@ -315,7 +348,6 @@ export default function Academy() {
       {/* Teach Tab */}
       {activeTab === "teach" && (
         <div>
-          {/* Earning Summary */}
           <div className="bg-white/5 rounded-2xl p-4 mb-4 border border-white/10">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp size={16} className="text-green-400" />
@@ -337,7 +369,6 @@ export default function Academy() {
             </div>
           </div>
 
-          {/* Commission Info */}
           <div className="bg-white/5 rounded-2xl p-4 mb-4 border border-white/10">
             <div className="text-white font-semibold text-sm mb-3">
               Revenue Split
@@ -367,7 +398,6 @@ export default function Academy() {
             </div>
           </div>
 
-          {/* Payout */}
           <div className="bg-white/5 rounded-2xl p-4 mb-4 border border-white/10">
             <div className="flex items-center justify-between mb-3">
               <div>
@@ -396,7 +426,6 @@ export default function Academy() {
             )}
           </div>
 
-          {/* My Courses */}
           <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
             <div className="text-white font-semibold text-sm mb-3">
               My Published Courses
@@ -432,7 +461,10 @@ export default function Academy() {
       {/* Subscription Modal */}
       {showSubscriptionModal && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-end justify-center p-4">
-          <div className="bg-[#1A1F2B] rounded-3xl w-full max-w-md p-6">
+          <div
+            data-ocid="academy.subscription.modal"
+            className="bg-[#1A1F2B] rounded-3xl w-full max-w-md p-6"
+          >
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
                 <Crown size={20} className="text-yellow-400" />
@@ -442,7 +474,8 @@ export default function Academy() {
               </div>
               <button
                 type="button"
-                onClick={() => setShowSubscriptionModal(false)}
+                data-ocid="academy.subscription.close_button"
+                onClick={handleCloseSubscriptionModal}
                 className="text-gray-400"
               >
                 <X size={20} />
@@ -451,12 +484,15 @@ export default function Academy() {
             <p className="text-gray-400 text-sm mb-5">
               Unlimited access to all courses, like Netflix for education!
             </p>
-            <div className="space-y-3 mb-5">
-              {["monthly", "yearly"].map((plan) => (
+
+            {/* Plan Selection */}
+            <div className="space-y-3 mb-4">
+              {(["monthly", "yearly"] as const).map((plan) => (
                 <button
                   type="button"
                   key={plan}
-                  onClick={() => setSelectedPlan(plan as "monthly" | "yearly")}
+                  data-ocid={`academy.subscription.${plan}.toggle`}
+                  onClick={() => setSelectedPlan(plan)}
                   className={`w-full p-4 rounded-2xl border-2 text-left transition-all ${
                     selectedPlan === plan
                       ? "border-purple-500 bg-purple-500/10"
@@ -468,24 +504,103 @@ export default function Academy() {
                       <div className="text-white font-bold">
                         {plan === "monthly" ? "Monthly" : "Yearly"}
                       </div>
-                      <div className="text-gray-400 text-sm">
-                        {plan === "monthly"
-                          ? "₹199 / month"
-                          : "₹999 / year (Save 58%!)"}
+                      <div className="flex items-center gap-2">
+                        {subPromoApplied ? (
+                          <>
+                            <span className="text-gray-500 text-sm line-through">
+                              ₹
+                              {plan === "monthly"
+                                ? MONTHLY_PRICE
+                                : YEARLY_PRICE}
+                            </span>
+                            <span className="text-green-400 text-sm font-bold">
+                              ₹
+                              {plan === "monthly"
+                                ? MONTHLY_DISCOUNTED
+                                : YEARLY_DISCOUNTED}
+                              {plan === "monthly" ? " / month" : " / year"}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-gray-400 text-sm">
+                            {plan === "monthly"
+                              ? `₹${MONTHLY_PRICE} / month`
+                              : `₹${YEARLY_PRICE} / year (Save 58%!)`}
+                          </span>
+                        )}
                       </div>
                     </div>
-                    {plan === "yearly" && (
-                      <span className="bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                        BEST VALUE
-                      </span>
-                    )}
-                    {selectedPlan === plan && (
-                      <Check size={18} className="text-purple-400" />
-                    )}
+                    <div className="flex items-center gap-2">
+                      {plan === "yearly" && (
+                        <span className="bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                          BEST VALUE
+                        </span>
+                      )}
+                      {selectedPlan === plan && (
+                        <Check size={18} className="text-purple-400" />
+                      )}
+                    </div>
                   </div>
                 </button>
               ))}
             </div>
+
+            {/* Promo Code Section */}
+            <div className="mb-4">
+              <label
+                htmlFor="sub-promo-input"
+                className="text-gray-400 text-xs mb-2 block flex items-center gap-1"
+              >
+                <Tag size={11} /> Promo Code
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  id="sub-promo-input"
+                  data-ocid="academy.subscription.promo.input"
+                  value={subPromoCode}
+                  onChange={(e) => {
+                    setSubPromoCode(e.target.value.toUpperCase());
+                    setSubPromoError("");
+                    if (subPromoApplied) setSubPromoApplied(false);
+                  }}
+                  onKeyDown={(e) => e.key === "Enter" && handleApplySubPromo()}
+                  placeholder="Enter promo code"
+                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 text-sm uppercase font-mono tracking-wider"
+                />
+                <button
+                  type="button"
+                  data-ocid="academy.subscription.promo.submit_button"
+                  onClick={handleApplySubPromo}
+                  disabled={!subPromoCode.trim() || subPromoApplied}
+                  className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-50 ${
+                    subPromoApplied
+                      ? "bg-green-500/20 text-green-400 border border-green-500/40"
+                      : "bg-purple-600 text-white hover:bg-purple-700"
+                  }`}
+                >
+                  {subPromoApplied ? <Check size={16} /> : "Apply"}
+                </button>
+              </div>
+              {subPromoApplied && (
+                <div
+                  data-ocid="academy.subscription.promo.success_state"
+                  className="flex items-center gap-1.5 text-green-400 text-xs mt-2"
+                >
+                  <Check size={12} /> 20% off applied!
+                </div>
+              )}
+              {subPromoError && (
+                <div
+                  data-ocid="academy.subscription.promo.error_state"
+                  className="text-red-400 text-xs mt-2"
+                >
+                  {subPromoError}
+                </div>
+              )}
+            </div>
+
+            {/* Features */}
             <div className="space-y-2 mb-5">
               {[
                 "All courses unlimited",
@@ -501,19 +616,22 @@ export default function Academy() {
                 </div>
               ))}
             </div>
+
             <button
               type="button"
+              data-ocid="academy.subscription.submit_button"
               onClick={() => {
                 setIsSubscribed(true);
-                setShowSubscriptionModal(false);
+                handleCloseSubscriptionModal();
               }}
               className="w-full py-3 rounded-2xl font-bold text-white"
               style={{
                 background: "linear-gradient(135deg, #7C3AED, #2563EB)",
               }}
             >
-              Subscribe{" "}
-              {selectedPlan === "monthly" ? "₹199/month" : "₹999/year"}
+              Subscribe ₹{currentPrice}/
+              {selectedPlan === "monthly" ? "month" : "year"}
+              {subPromoApplied && " ✓ 20% OFF"}
             </button>
             <p className="text-center text-gray-500 text-xs mt-3">
               Cancel anytime
