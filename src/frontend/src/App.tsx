@@ -20,6 +20,7 @@ const Reels = lazy(() => import("./pages/Reels"));
 const Academy = lazy(() => import("./pages/Academy"));
 const WalletPage = lazy(() => import("./pages/Wallet"));
 const CreatorDashboard = lazy(() => import("./pages/CreatorDashboard"));
+const EarningAccount = lazy(() => import("./pages/EarningAccount"));
 
 function PageLoader() {
   return (
@@ -49,6 +50,7 @@ function Router() {
     if (currentPath === "/academy") return <Academy />;
     if (currentPath === "/wallet") return <WalletPage />;
     if (currentPath === "/creator") return <CreatorDashboard />;
+    if (currentPath === "/earning-account") return <EarningAccount />;
     return <Home />;
   };
 

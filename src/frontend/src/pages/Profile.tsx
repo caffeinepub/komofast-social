@@ -573,6 +573,42 @@ export default function Profile() {
             transition={{ duration: 0.25 }}
             className="mt-4 space-y-4 pb-8"
           >
+            {/* Earning Account Card */}
+            <div
+              className="rounded-2xl p-4 flex items-center gap-4"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(34,197,94,0.1), rgba(47,168,255,0.15))",
+                border: "1px solid rgba(47,168,255,0.3)",
+                boxShadow: "0 4px 16px rgba(47,168,255,0.1)",
+              }}
+            >
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center text-[22px] flex-shrink-0"
+                style={{
+                  background: "linear-gradient(135deg, #22c55e, #2fa8ff)",
+                }}
+              >
+                💰
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-bold text-foreground">
+                  Earning Account
+                </p>
+                <p className="text-[12px] text-komo-text-muted leading-snug mt-0.5">
+                  View all income sources &amp; linked accounts
+                </p>
+              </div>
+              <Button
+                data-ocid="profile.earning_account.primary_button"
+                size="sm"
+                className="komo-gradient border-0 text-white text-[12px] h-8 px-3 flex-shrink-0"
+                onClick={() => navigate("/earning-account")}
+              >
+                Open
+              </Button>
+            </div>
+
             {/* Creator Studio Card */}
             <div
               className="rounded-2xl p-4 flex items-center gap-4"
