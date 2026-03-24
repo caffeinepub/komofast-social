@@ -14,7 +14,7 @@ type RegisterStep = "form" | "verify";
 type ContactType = "mobile" | "email";
 
 export default function Login() {
-  const { login } = useApp();
+  const { login, navigate } = useApp();
 
   // Mode
   const [mode, setMode] = useState<PageMode>("login");
@@ -711,6 +711,33 @@ export default function Login() {
           </AnimatePresence>
         )}
       </AnimatePresence>
+
+      {/* Terms & Privacy links */}
+      <p
+        className="mt-6 text-[12px] text-center"
+        style={{ color: "rgba(255,255,255,0.35)" }}
+      >
+        By signing up, you agree to our{" "}
+        <button
+          type="button"
+          data-ocid="login.terms.link"
+          onClick={() => navigate("/terms")}
+          style={{ color: "rgba(47,168,255,0.7)" }}
+          className="hover:underline"
+        >
+          Terms &amp; Conditions
+        </button>{" "}
+        and{" "}
+        <button
+          type="button"
+          data-ocid="login.privacy.link"
+          onClick={() => navigate("/privacy-policy")}
+          style={{ color: "rgba(47,168,255,0.7)" }}
+          className="hover:underline"
+        >
+          Privacy Policy
+        </button>
+      </p>
 
       <p
         className="mt-8 text-[11px]"

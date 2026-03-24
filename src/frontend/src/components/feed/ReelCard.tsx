@@ -1,6 +1,11 @@
 import { Heart, MessageCircle, Music, Play } from "lucide-react";
 import { motion } from "motion/react";
 
+interface MusicInfo {
+  title: string;
+  artist: string;
+}
+
 interface ReelCardProps {
   reel: {
     id: string;
@@ -12,6 +17,7 @@ interface ReelCardProps {
     views: string;
     initials: string;
     gradient: string;
+    music?: MusicInfo;
   };
   index: number;
 }
@@ -65,6 +71,39 @@ export default function ReelCard({ reel, index }: ReelCardProps) {
 
       {/* Bottom overlay */}
       <div className="absolute bottom-0 left-0 right-0 p-3">
+        {/* Music marquee bar */}
+        {reel.music && (
+          <div
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-full mb-2 overflow-hidden"
+            style={{
+              background: "rgba(0,0,0,0.6)",
+              backdropFilter: "blur(8px)",
+              border: "1px solid rgba(255,255,255,0.1)",
+            }}
+          >
+            {/* Spinning vinyl disc */}
+            <div
+              className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center"
+              style={{
+                background: "linear-gradient(135deg, #a855f7, #ec4899)",
+                animation: "spin 3s linear infinite",
+              }}
+            >
+              <Music size={9} className="text-white" />
+            </div>
+            {/* Scrolling text */}
+            <div className="flex-1 overflow-hidden">
+              <div
+                className="whitespace-nowrap text-[10px] text-white font-medium"
+                style={{ animation: "marquee 8s linear infinite" }}
+              >
+                ♪ {reel.music.title} - {reel.music.artist}
+                &nbsp;&nbsp;&nbsp;♪ {reel.music.title} - {reel.music.artist}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center gap-2 mb-2">
           <div
             className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"

@@ -1,10 +1,20 @@
 import { Button } from "@/components/ui/button";
-import { Bell, MessageCircle, Search, ShoppingCart, X } from "lucide-react";
+import {
+  Bell,
+  Globe,
+  MessageCircle,
+  Search,
+  ShoppingCart,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 import { useApp } from "../../context/AppContext";
+import { useLanguage } from "../../context/LanguageContext";
+import { LANGUAGES } from "../../i18n/translations";
 
 export default function TopBar() {
   const { navigate, unreadNotifs, cartCount, currentUser } = useApp();
+  const { lang } = useLanguage();
   const [searchVal, setSearchVal] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
 
@@ -13,6 +23,8 @@ export default function TopBar() {
         .slice(0, 2)
         .toUpperCase()
     : "U";
+
+  const currentLang = LANGUAGES.find((l) => l.code === lang);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-16 glass-effect">
@@ -70,6 +82,18 @@ export default function TopBar() {
 
         {/* Right icons */}
         <div className="flex items-center gap-1 flex-shrink-0">
+          {/* Language shortcut */}
+          <Button
+            data-ocid="topbar.language.button"
+            variant="ghost"
+            size="icon"
+            title={`Language: ${currentLang?.native ?? lang}`}
+            className="w-9 h-9 rounded-full hover:bg-accent text-komo-text-secondary hover:text-komo-blue transition-colors"
+            onClick={() => navigate("/language")}
+          >
+            <Globe size={17} />
+          </Button>
+
           <Button
             data-ocid="topbar.notifications.button"
             variant="ghost"
@@ -89,9 +113,11 @@ export default function TopBar() {
             data-ocid="topbar.messages.button"
             variant="ghost"
             size="icon"
-            className="w-9 h-9 rounded-full hover:bg-accent text-komo-text-secondary hover:text-foreground"
+            onClick={() => navigate("/chat")}
+            className="relative w-9 h-9 rounded-full hover:bg-accent text-komo-text-secondary hover:text-foreground"
           >
             <MessageCircle size={19} />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
           </Button>
 
           <Button

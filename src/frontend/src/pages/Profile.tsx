@@ -5,19 +5,25 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Ban,
   Bookmark,
+  ChevronRight,
+  FileText,
   Flag,
   Flame,
+  Globe,
   Grid,
   Heart,
+  HelpCircle,
   Lock,
   LogOut,
   Play,
   Settings,
   Share2,
+  Shield,
   ShoppingBag,
   Star,
   TrendingUp,
   Trophy,
+  UserCheck,
   UserMinus,
   UserPlus,
   Users,
@@ -29,7 +35,9 @@ import { toast } from "sonner";
 import PostDetailModal from "../components/modals/PostDetailModal";
 import ReportModal from "../components/modals/ReportModal";
 import { useApp } from "../context/AppContext";
+import { useLanguage } from "../context/LanguageContext";
 import { AVATAR_GRADIENTS, MOCK_POSTS } from "../data/mockData";
+import { LANGUAGES } from "../i18n/translations";
 
 const PROFILE_MOCK = {
   id: "me",
@@ -122,11 +130,15 @@ export default function Profile() {
     unblockUser,
     bannedUsers,
   } = useApp();
+  const { lang } = useLanguage();
   const isOwnProfile = !currentPath.includes("userId");
   const profileUsername = currentPath.includes("userId")
     ? "other_user"
     : currentUser?.username || "komofast_user";
   const [following, setFollowing] = useState(false);
+  const [friendStatus, setFriendStatus] = useState<
+    "none" | "pending" | "friends"
+  >("none");
   const [reportUserOpen, setReportUserOpen] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
   const [activeTab, setActiveTab] = useState<"posts" | "saved" | "earning">(
@@ -156,6 +168,8 @@ export default function Profile() {
     next: nextTier,
     progress: tierProgress,
   } = getTierInfo(HONOR_POINTS);
+
+  const currentLang = LANGUAGES.find((l) => l.code === lang);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-4">
@@ -239,6 +253,14 @@ export default function Profile() {
                   <Zap size={10} className="mr-0.5" /> CREATOR
                 </Badge>
               )}
+              {/* Director demo badge */}
+              <Badge
+                data-ocid="profile.director.badge"
+                className="bg-amber-400/10 text-amber-400 border-amber-400/30 text-[10px] cursor-pointer hover:bg-amber-400/20 transition-colors"
+                onClick={() => navigate("/director")}
+              >
+                <Shield size={10} className="mr-0.5" /> DIRECTOR
+              </Badge>
             </div>
             <p className="text-[13px] text-komo-text-muted">
               @{profile.username}
@@ -281,6 +303,40 @@ export default function Profile() {
                     <UserPlus size={14} className="mr-1" />
                   )}
                   {following ? "Unfollow" : "Follow"}
+                </Button>
+                <Button
+                  data-ocid="profile.add_friend.button"
+                  size="sm"
+                  onClick={() => {
+                    if (friendStatus === "none") {
+                      setFriendStatus("pending");
+                      toast.success("Friend request bheji gayi! 🤝");
+                    }
+                  }}
+                  className={
+                    friendStatus === "friends"
+                      ? "bg-green-600/20 text-green-400 border border-green-600/40"
+                      : friendStatus === "pending"
+                        ? "bg-muted text-muted-foreground"
+                        : "bg-gradient-to-r from-blue-500 to-purple-600 border-0 text-white"
+                  }
+                >
+                  {friendStatus === "friends" ? (
+                    <>
+                      <UserCheck size={14} className="mr-1" />
+                      Friends
+                    </>
+                  ) : friendStatus === "pending" ? (
+                    <>
+                      <UserPlus size={14} className="mr-1" />
+                      Pending...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus size={14} className="mr-1" />
+                      Add Friend
+                    </>
+                  )}
                 </Button>
                 {profile.isCreator && (
                   <Button
@@ -846,6 +902,104 @@ export default function Profile() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Support & Legal Links */}
+      {isOwnProfile && (
+        <div
+          className="mt-4 rounded-2xl overflow-hidden mb-6"
+          style={{
+            background: "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <div className="px-4 py-3 border-b border-white/5">
+            <p className="text-[12px] font-semibold text-white/50 uppercase tracking-wider">
+              Support &amp; Legal
+            </p>
+          </div>
+
+          {/* Language Setting */}
+          <button
+            type="button"
+            data-ocid="profile.language.link"
+            onClick={() => navigate("/language")}
+            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors border-b border-white/5"
+          >
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(47,168,255,0.25), rgba(168,85,247,0.25))",
+              }}
+            >
+              <Globe size={14} className="text-komo-blue" />
+            </div>
+            <span className="flex-1 text-[13px] font-medium text-white/70">
+              Language / भाषा
+            </span>
+            <span className="text-[12px] text-komo-text-muted mr-1">
+              {currentLang?.flag} {currentLang?.native}
+            </span>
+            <ChevronRight size={15} className="text-white/30" />
+          </button>
+
+          {/* Help Center */}
+          <button
+            type="button"
+            data-ocid="profile.help.link"
+            onClick={() => navigate("/help")}
+            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors border-b border-white/5"
+          >
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(47,168,255,0.25), rgba(168,85,247,0.25))",
+              }}
+            >
+              <HelpCircle size={14} className="text-komo-blue" />
+            </div>
+            <span className="flex-1 text-[13px] font-medium text-white/70">
+              Help Center / सहायता केंद्र
+            </span>
+            <ChevronRight size={15} className="text-white/30" />
+          </button>
+          {[
+            {
+              label: "Privacy Policy",
+              path: "/privacy-policy",
+              emoji: "🔒",
+              ocid: "profile.privacy.link",
+            },
+            {
+              label: "Terms & Conditions",
+              path: "/terms",
+              emoji: "📜",
+              ocid: "profile.terms.link",
+            },
+            {
+              label: "Data Protection (IT Act)",
+              path: "/data-protection",
+              emoji: "🛡️",
+              ocid: "profile.dataprotection.link",
+            },
+          ].map((item, idx, arr) => (
+            <button
+              key={item.path}
+              type="button"
+              data-ocid={item.ocid}
+              onClick={() => navigate(item.path)}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors ${idx < arr.length - 1 ? "border-b border-white/5" : ""}`}
+            >
+              <span className="text-[18px]">{item.emoji}</span>
+              <span className="flex-1 text-[13px] font-medium text-white/70">
+                {item.label}
+              </span>
+              <ChevronRight size={15} className="text-white/30" />
+            </button>
+          ))}
+        </div>
+      )}
 
       <PostDetailModal
         post={selectedPost}

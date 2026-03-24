@@ -53,7 +53,7 @@ import {
   X,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 import { useApp } from "../context/AppContext";
 import { AVATAR_GRADIENTS, MOCK_PRODUCTS } from "../data/mockData";
@@ -173,6 +173,167 @@ const MOCK_PENDING_POSTS = [
     time: "1h ago",
   },
 ];
+
+function DirectorManagementSection() {
+  const [directors, setDirectors] = React.useState([
+    {
+      id: "d1",
+      username: "rahul_director",
+      displayName: "Rahul Sharma",
+      initials: "RS",
+      gradient: "linear-gradient(135deg,#6366f1,#8b5cf6)",
+    },
+    {
+      id: "d2",
+      username: "priya_mod",
+      displayName: "Priya Verma",
+      initials: "PV",
+      gradient: "linear-gradient(135deg,#ec4899,#8b5cf6)",
+    },
+  ]);
+  const [assignInput, setAssignInput] = React.useState("");
+  const [assignOpen, setAssignOpen] = React.useState(false);
+
+  const handleAssign = () => {
+    if (!assignInput.trim()) return;
+    const username = assignInput.replace("@", "").trim();
+    setDirectors((prev) => [
+      ...prev,
+      {
+        id: `d${Date.now()}`,
+        username,
+        displayName: username
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase()),
+        initials: username.slice(0, 2).toUpperCase(),
+        gradient: "linear-gradient(135deg,#f59e0b,#d97706)",
+      },
+    ]);
+    setAssignInput("");
+    setAssignOpen(false);
+    toast.success(`@${username} ko Director assign kiya gaya!`);
+  };
+
+  const handleRemove = (id: string, username: string) => {
+    setDirectors((prev) => prev.filter((d) => d.id !== id));
+    toast.error(`@${username} ko Director se remove kiya gaya.`);
+  };
+
+  return (
+    <div className="komo-surface rounded-2xl komo-card-shadow overflow-hidden mb-5">
+      <div className="p-4 border-b border-komo-border flex items-center justify-between">
+        <div>
+          <h2 className="text-[14px] font-semibold text-foreground flex items-center gap-2">
+            <span
+              className="w-5 h-5 rounded-md flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg,#f59e0b,#d97706)" }}
+            >
+              <Shield size={11} className="text-white" />
+            </span>
+            Director Management
+          </h2>
+          <p className="text-[12px] text-komo-text-muted mt-0.5">
+            Users ko Director role assign ya remove karen
+          </p>
+        </div>
+        <button
+          type="button"
+          data-ocid="owner.director.open_modal_button"
+          onClick={() => setAssignOpen((v) => !v)}
+          className="text-[12px] font-semibold px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all"
+          style={{
+            background: "rgba(245,158,11,0.15)",
+            color: "#f59e0b",
+            border: "1px solid rgba(245,158,11,0.3)",
+          }}
+        >
+          <Plus size={13} /> Assign Director
+        </button>
+      </div>
+
+      {assignOpen && (
+        <div
+          className="px-4 py-3 border-b border-komo-border flex gap-2"
+          style={{ background: "rgba(245,158,11,0.05)" }}
+        >
+          <Input
+            data-ocid="owner.director.input"
+            placeholder="@username"
+            value={assignInput}
+            onChange={(e) => setAssignInput(e.target.value)}
+            className="h-8 text-[12px] flex-1"
+            onKeyDown={(e) => e.key === "Enter" && handleAssign()}
+          />
+          <Button
+            data-ocid="owner.director.submit_button"
+            size="sm"
+            onClick={handleAssign}
+            className="h-8 text-[12px]"
+            style={{
+              background: "linear-gradient(135deg,#f59e0b,#d97706)",
+              border: "none",
+              color: "white",
+            }}
+          >
+            Assign
+          </Button>
+        </div>
+      )}
+
+      <div className="divide-y divide-komo-border/40">
+        {directors.length === 0 ? (
+          <div
+            data-ocid="owner.director.empty_state"
+            className="px-4 py-6 text-center text-[12px] text-komo-text-muted"
+          >
+            Koi Director assign nahi hai
+          </div>
+        ) : (
+          directors.map((dir, i) => (
+            <div
+              key={dir.id}
+              data-ocid={`owner.director.item.${i + 1}`}
+              className="flex items-center gap-3 px-4 py-3"
+            >
+              <div
+                className="w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0"
+                style={{ background: dir.gradient }}
+              >
+                {dir.initials}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-semibold text-foreground">
+                  {dir.displayName}
+                </p>
+                <p className="text-[11px] text-komo-text-muted">
+                  @{dir.username}
+                </p>
+              </div>
+              <span
+                className="text-[9px] font-bold px-2 py-1 rounded-full mr-2"
+                style={{
+                  background: "rgba(245,158,11,0.15)",
+                  color: "#f59e0b",
+                  border: "1px solid rgba(245,158,11,0.25)",
+                }}
+              >
+                DIRECTOR
+              </span>
+              <button
+                type="button"
+                data-ocid={`owner.director.delete_button.${i + 1}`}
+                onClick={() => handleRemove(dir.id, dir.username)}
+                className="text-[11px] text-destructive hover:bg-destructive/10 rounded-lg px-2 py-1 transition-colors"
+              >
+                Remove
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
 
 function RoleBadge({ role }: { role: string }) {
   if (role === "owner") {
@@ -316,9 +477,66 @@ const CATEGORY_META: Record<
   },
 };
 
+const MODERATION_CATEGORIES = [
+  {
+    emoji: "📰",
+    category: "Fake News / Misinformation",
+    description:
+      "Deliberately false or misleading information presented as fact.",
+    action: "Warning → Ban",
+    enforcement:
+      "1st offense: Warning. 2nd offense: 7-day suspension. 3rd offense: Permanent ban.",
+  },
+  {
+    emoji: "🔞",
+    category: "Adult / Sexual Content",
+    description: "Explicit, pornographic, or sexually suggestive material.",
+    action: "Immediate Removal",
+    enforcement:
+      "Immediate content removal. Repeat offenders: Account permanently banned.",
+  },
+  {
+    emoji: "💢",
+    category: "Hate Speech",
+    description:
+      "Content promoting discrimination, violence, or hatred based on race, religion, gender, or nationality.",
+    action: "Warning → Ban",
+    enforcement:
+      "1st offense: Warning + removal. 2nd offense: 30-day suspension. 3rd offense: Permanent ban.",
+  },
+  {
+    emoji: "🔪",
+    category: "Violence / Gore",
+    description:
+      "Graphic depictions of violence, self-harm, or threats of physical harm.",
+    action: "Immediate Removal",
+    enforcement:
+      "Immediate removal. Reported to authorities if content involves real threats.",
+  },
+  {
+    emoji: "📧",
+    category: "Spam / Scam",
+    description:
+      "Unsolicited commercial messages, phishing links, or fraudulent schemes.",
+    action: "Warning → Suspension",
+    enforcement:
+      "1st offense: Warning. 2nd offense: 14-day suspension. Persistent: Permanent ban.",
+  },
+  {
+    emoji: "❌",
+    category: "Illegal Content",
+    description:
+      "Any content that violates Indian law or international laws (IT Act 2000).",
+    action: "Immediate Ban",
+    enforcement:
+      "Immediate permanent ban + content removal. Case reported to law enforcement as required.",
+  },
+];
+
 function ModerationPanel() {
   const { reportedItems, bannedUsers, banUser, unbanUser, updateReportStatus } =
     useApp();
+  const [autoModEnabled, setAutoModEnabled] = useState(true);
   const pendingReports = reportedItems.filter((r) => r.status === "pending");
   const removedCount = reportedItems.filter(
     (r) => r.status === "removed",
@@ -543,6 +761,76 @@ function ModerationPanel() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Content Moderation Policy */}
+      <div className="komo-surface rounded-2xl komo-card-shadow overflow-hidden">
+        <div className="px-4 py-3 border-b border-komo-border flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Shield size={15} className="text-komo-purple" />
+            <span className="text-[14px] font-semibold text-foreground">
+              Content Moderation Policy
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              className={`text-[11px] font-semibold ${autoModEnabled ? "text-green-400" : "text-komo-text-muted"}`}
+            >
+              {autoModEnabled ? "Auto-Mod ON" : "Auto-Mod OFF"}
+            </span>
+            <Switch
+              checked={autoModEnabled}
+              onCheckedChange={setAutoModEnabled}
+            />
+          </div>
+        </div>
+
+        <div className="p-4 space-y-3">
+          {MODERATION_CATEGORIES.map((cat) => (
+            <div
+              key={cat.category}
+              className="rounded-xl p-3"
+              style={{
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.06)",
+              }}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <span>{cat.emoji}</span>
+                <span className="text-[13px] font-bold text-foreground">
+                  {cat.category}
+                </span>
+                <Badge className="ml-auto text-[9px] bg-red-500/15 text-red-400 border-red-500/30">
+                  {cat.action}
+                </Badge>
+              </div>
+              <p className="text-[12px] text-komo-text-muted">
+                {cat.description}
+              </p>
+              <p className="text-[11px] text-orange-400/80 mt-1">
+                ⚠️ {cat.enforcement}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div
+          className="mx-4 mb-4 p-3 rounded-xl"
+          style={{
+            background: "rgba(47,168,255,0.07)",
+            border: "1px solid rgba(47,168,255,0.2)",
+          }}
+        >
+          <p className="text-[12px] font-semibold text-komo-blue mb-1">
+            📌 Appeal Process
+          </p>
+          <p className="text-[12px] text-komo-text-muted">
+            Users can appeal content removal decisions within{" "}
+            <strong className="text-white/80">7 days</strong> by contacting{" "}
+            <span className="text-komo-blue">vijayk37427@gmail.com</span> with
+            their username and the content ID.
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -1923,6 +2211,9 @@ export default function Admin() {
                   Owner Management
                 </h1>
               </div>
+
+              {/* Director Management Card */}
+              <DirectorManagementSection />
 
               {/* Admin Management Card */}
               <div className="komo-surface rounded-2xl komo-card-shadow overflow-hidden">

@@ -6,7 +6,11 @@ import TopBar from "./components/layout/TopBar";
 import CameraReelModal from "./components/modals/CameraReelModal";
 import CreatePostModal from "./components/modals/CreatePostModal";
 import CreateStoryModal from "./components/modals/CreateStoryModal";
+import FullMusicPlayer from "./components/music/FullMusicPlayer";
+import MiniMusicPlayer from "./components/music/MiniMusicPlayer";
 import { AppProvider, useApp } from "./context/AppContext";
+import { LanguageProvider } from "./context/LanguageContext";
+import { MusicPlayerProvider } from "./context/MusicPlayerContext";
 import Login from "./pages/Login";
 
 const Home = lazy(() => import("./pages/Home"));
@@ -21,6 +25,16 @@ const Academy = lazy(() => import("./pages/Academy"));
 const WalletPage = lazy(() => import("./pages/Wallet"));
 const CreatorDashboard = lazy(() => import("./pages/CreatorDashboard"));
 const EarningAccount = lazy(() => import("./pages/EarningAccount"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsConditions = lazy(() => import("./pages/TermsConditions"));
+const DataProtection = lazy(() => import("./pages/DataProtection"));
+const Groups = lazy(() => import("./pages/Groups"));
+const Watch = lazy(() => import("./pages/Watch"));
+const Director = lazy(() => import("./pages/Director"));
+const HelpCenter = lazy(() => import("./pages/HelpCenter"));
+const LanguageSettings = lazy(() => import("./pages/LanguageSettings"));
+const FriendsPage = lazy(() => import("./pages/Friends"));
+const ChatPage = lazy(() => import("./pages/Chat"));
 
 function PageLoader() {
   return (
@@ -33,6 +47,42 @@ function PageLoader() {
 function Router() {
   const { currentPath, isLoggedIn, cameraReelOpen, setCameraReelOpen } =
     useApp();
+
+  if (currentPath === "/privacy-policy") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <PrivacyPolicy />
+      </Suspense>
+    );
+  }
+  if (currentPath === "/terms") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <TermsConditions />
+      </Suspense>
+    );
+  }
+  if (currentPath === "/data-protection") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <DataProtection />
+      </Suspense>
+    );
+  }
+  if (currentPath === "/help") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <HelpCenter />
+      </Suspense>
+    );
+  }
+  if (currentPath === "/language") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <LanguageSettings />
+      </Suspense>
+    );
+  }
 
   if (!isLoggedIn) {
     return <Login />;
@@ -51,6 +101,11 @@ function Router() {
     if (currentPath === "/wallet") return <WalletPage />;
     if (currentPath === "/creator") return <CreatorDashboard />;
     if (currentPath === "/earning-account") return <EarningAccount />;
+    if (currentPath === "/groups") return <Groups />;
+    if (currentPath === "/watch") return <Watch />;
+    if (currentPath === "/director") return <Director />;
+    if (currentPath === "/friends") return <FriendsPage />;
+    if (currentPath === "/chat") return <ChatPage />;
     return <Home />;
   };
 
@@ -73,15 +128,22 @@ function Router() {
         open={cameraReelOpen}
         onClose={() => setCameraReelOpen(false)}
       />
+      {/* Global Music Player */}
+      <MiniMusicPlayer />
+      <FullMusicPlayer />
     </div>
   );
 }
 
 export default function App() {
   return (
-    <AppProvider>
-      <Router />
-      <Toaster position="top-center" theme="dark" />
-    </AppProvider>
+    <LanguageProvider>
+      <AppProvider>
+        <MusicPlayerProvider>
+          <Router />
+          <Toaster position="top-center" theme="dark" />
+        </MusicPlayerProvider>
+      </AppProvider>
+    </LanguageProvider>
   );
 }

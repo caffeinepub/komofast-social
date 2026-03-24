@@ -1,17 +1,27 @@
+import { Slider } from "@/components/ui/slider";
 import {
   Camera,
   Check,
+  Droplets,
+  Eye,
   FlipHorizontal,
+  Heart,
+  Layers,
   Mic,
   MicOff,
+  Music,
   RefreshCw,
+  SmilePlus,
   Sparkles,
+  Sun,
+  UserCheck,
   Video,
   X,
   Zap,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import MusicPickerPanel, { type Song } from "./MusicPickerPanel";
 import ReelAIEditorModal from "./ReelAIEditorModal";
 
 interface Props {
@@ -20,6 +30,264 @@ interface Props {
 }
 
 type Mode = "camera" | "preview";
+
+const FILTERS: { name: string; css: string }[] = [
+  { name: "None", css: "none" },
+  { name: "Vivid", css: "saturate(2) contrast(1.1)" },
+  { name: "Warm", css: "sepia(0.4) saturate(1.4) brightness(1.05)" },
+  { name: "Cool", css: "hue-rotate(200deg) saturate(1.2)" },
+  { name: "B&W", css: "grayscale(1)" },
+  { name: "Fade", css: "opacity(0.85) brightness(1.1) saturate(0.7)" },
+  { name: "Vintage", css: "sepia(0.7) contrast(0.9) brightness(0.95)" },
+  { name: "Neon", css: "hue-rotate(280deg) saturate(3) brightness(1.1)" },
+  { name: "Golden", css: "sepia(0.5) saturate(1.8) brightness(1.1)" },
+  { name: "Arctic", css: "hue-rotate(180deg) saturate(1.5) brightness(1.1)" },
+  { name: "Drama", css: "contrast(1.5) saturate(1.3)" },
+  { name: "Glow", css: "brightness(1.3) saturate(1.2) contrast(0.9)" },
+  { name: "Matte", css: "contrast(0.85) saturate(0.8) brightness(1.05)" },
+  { name: "Retro", css: "sepia(0.3) hue-rotate(340deg) saturate(1.5)" },
+  { name: "Lomo", css: "contrast(1.4) saturate(1.6) brightness(0.9)" },
+  { name: "Soft", css: "brightness(1.15) blur(0.3px) saturate(0.9)" },
+  { name: "Sharp", css: "contrast(1.3) saturate(1.1)" },
+  { name: "Blush", css: "hue-rotate(340deg) saturate(1.8) brightness(1.05)" },
+  { name: "Mint", css: "hue-rotate(120deg) saturate(1.3) brightness(1.1)" },
+  { name: "Lilac", css: "hue-rotate(260deg) saturate(1.4) brightness(1.05)" },
+  { name: "Sunset", css: "hue-rotate(15deg) saturate(2) brightness(1.05)" },
+  { name: "Dusk", css: "hue-rotate(30deg) saturate(1.6) brightness(0.9)" },
+  { name: "Ocean", css: "hue-rotate(190deg) saturate(1.8) brightness(1.0)" },
+  { name: "Forest", css: "hue-rotate(100deg) saturate(1.5) brightness(0.95)" },
+  { name: "Sahara", css: "sepia(0.6) saturate(1.7) brightness(1.1)" },
+  { name: "Pink", css: "hue-rotate(320deg) saturate(2) brightness(1.05)" },
+  { name: "Ice", css: "hue-rotate(200deg) saturate(0.8) brightness(1.2)" },
+  { name: "Cherry", css: "hue-rotate(330deg) saturate(2.2) contrast(1.1)" },
+  { name: "Olive", css: "hue-rotate(80deg) saturate(1.2) brightness(0.9)" },
+  { name: "Coral", css: "hue-rotate(10deg) saturate(2.1) brightness(1.05)" },
+  { name: "Teal", css: "hue-rotate(160deg) saturate(1.7) brightness(1.0)" },
+  { name: "Ink", css: "grayscale(0.5) contrast(1.5) brightness(0.85)" },
+  { name: "Haze", css: "brightness(1.1) saturate(0.5) contrast(0.85)" },
+  { name: "Deep", css: "brightness(0.8) contrast(1.3) saturate(1.4)" },
+  { name: "Amber", css: "sepia(0.4) hue-rotate(10deg) saturate(1.8)" },
+  { name: "Cyan", css: "hue-rotate(170deg) saturate(2) brightness(1.05)" },
+  { name: "Magenta", css: "hue-rotate(300deg) saturate(2.2) brightness(1.05)" },
+  { name: "Honey", css: "sepia(0.3) saturate(1.9) brightness(1.1)" },
+  { name: "Smoke", css: "grayscale(0.7) brightness(1.1) contrast(0.9)" },
+  { name: "Holo", css: "hue-rotate(45deg) saturate(2.5) brightness(1.1)" },
+  { name: "X-Pro", css: "contrast(1.4) sepia(0.3) saturate(1.5)" },
+  { name: "Rise", css: "brightness(1.2) sepia(0.2) saturate(1.1)" },
+  { name: "Hudson", css: "brightness(1.1) contrast(0.8) saturate(1.2)" },
+  {
+    name: "Valencia",
+    css: "sepia(0.2) saturate(1.5) contrast(1.1) brightness(1.05)",
+  },
+  {
+    name: "Amaro",
+    css: "hue-rotate(20deg) saturate(1.5) brightness(1.1) contrast(0.9)",
+  },
+  { name: "Earlybird", css: "sepia(0.5) brightness(0.95) contrast(1.1)" },
+  { name: "Inkwell", css: "grayscale(1) contrast(1.1) brightness(1.05)" },
+  { name: "Toaster", css: "sepia(0.4) contrast(1.3) saturate(1.3)" },
+  { name: "Walden", css: "hue-rotate(350deg) saturate(1.6) brightness(1.1)" },
+  {
+    name: "Kelvin",
+    css: "sepia(0.3) hue-rotate(350deg) saturate(2) brightness(1.05)",
+  },
+  { name: "Lo-Fi", css: "saturate(1.8) contrast(1.3)" },
+  {
+    name: "Nashville",
+    css: "sepia(0.2) hue-rotate(340deg) saturate(1.4) brightness(1.05)",
+  },
+  { name: "Clarendon", css: "contrast(1.2) saturate(1.35)" },
+  { name: "Gingham", css: "brightness(1.05) hue-rotate(350deg) saturate(0.9)" },
+  { name: "Moon", css: "grayscale(1) contrast(1.1) brightness(1.1)" },
+  { name: "Lark", css: "brightness(1.1) contrast(0.9) saturate(1.3)" },
+  {
+    name: "Reyes",
+    css: "sepia(0.3) brightness(1.1) contrast(0.85) saturate(0.9)",
+  },
+  { name: "Juno", css: "hue-rotate(10deg) saturate(1.4) contrast(1.1)" },
+  { name: "Slumber", css: "saturate(0.7) brightness(1.05) contrast(0.9)" },
+  {
+    name: "Crema",
+    css: "sepia(0.2) saturate(1.1) brightness(1.1) contrast(0.95)",
+  },
+  {
+    name: "Ludwig",
+    css: "sepia(0.1) saturate(1.1) brightness(1.05) contrast(0.95)",
+  },
+  {
+    name: "Aden",
+    css: "hue-rotate(20deg) saturate(0.85) brightness(1.15) contrast(0.9)",
+  },
+  {
+    name: "Perpetua",
+    css: "hue-rotate(180deg) saturate(1.05) brightness(1.1) contrast(1.0)",
+  },
+  { name: "Mayfair", css: "contrast(1.1) saturate(1.1)" },
+  { name: "Willow", css: "grayscale(0.3) contrast(0.95) brightness(1.05)" },
+  { name: "Sierra", css: "contrast(1.2) sepia(0.2) brightness(0.95)" },
+  { name: "Skyline", css: "hue-rotate(210deg) saturate(1.4) brightness(1.1)" },
+  { name: "Prism", css: "hue-rotate(90deg) saturate(1.8) brightness(1.05)" },
+  { name: "Ruby", css: "hue-rotate(345deg) saturate(2.5) brightness(0.95)" },
+  { name: "Sapphire", css: "hue-rotate(225deg) saturate(2) brightness(1.0)" },
+  { name: "Emerald", css: "hue-rotate(130deg) saturate(2) brightness(1.0)" },
+  { name: "Topaz", css: "hue-rotate(50deg) saturate(1.8) brightness(1.05)" },
+  { name: "Opal", css: "hue-rotate(270deg) saturate(1.5) brightness(1.15)" },
+  { name: "Garnet", css: "hue-rotate(355deg) saturate(2.3) brightness(0.9)" },
+  { name: "Bronze", css: "sepia(0.6) hue-rotate(5deg) saturate(1.6)" },
+  { name: "Silver", css: "grayscale(0.4) brightness(1.15) contrast(0.95)" },
+  { name: "Platinum", css: "grayscale(0.6) brightness(1.25) contrast(0.9)" },
+  { name: "Aurora", css: "hue-rotate(150deg) saturate(2.2) brightness(1.05)" },
+  { name: "Nebula", css: "hue-rotate(290deg) saturate(2.5) brightness(0.9)" },
+  {
+    name: "Cosmic",
+    css: "invert(0.05) hue-rotate(200deg) saturate(2) brightness(0.95)",
+  },
+  { name: "Eclipse", css: "brightness(0.7) contrast(1.5) saturate(1.3)" },
+  { name: "Solar", css: "brightness(1.3) saturate(1.8) contrast(1.1)" },
+  { name: "Lunar", css: "brightness(0.9) grayscale(0.5) contrast(1.1)" },
+  { name: "Vibe", css: "hue-rotate(60deg) saturate(2) brightness(1.05)" },
+  { name: "Pop", css: "saturate(2.5) contrast(1.2) brightness(1.05)" },
+  { name: "Grunge", css: "contrast(1.5) saturate(0.6) brightness(0.85)" },
+  {
+    name: "Film",
+    css: "sepia(0.15) contrast(1.05) brightness(0.98) saturate(1.1)",
+  },
+  { name: "Night", css: "brightness(0.6) contrast(1.3) saturate(1.5)" },
+  { name: "Nite", css: "hue-rotate(240deg) brightness(0.7) saturate(1.8)" },
+  { name: "Dreamy", css: "brightness(1.15) blur(0.5px) saturate(1.3)" },
+  { name: "Glam", css: "brightness(1.2) saturate(1.6) contrast(1.05)" },
+  { name: "Pulse", css: "hue-rotate(330deg) saturate(1.9) contrast(1.15)" },
+  { name: "Storm", css: "grayscale(0.3) contrast(1.4) brightness(0.85)" },
+  {
+    name: "Blaze",
+    css: "hue-rotate(20deg) saturate(2.8) brightness(1.1) contrast(1.1)",
+  },
+  { name: "Frost", css: "hue-rotate(200deg) brightness(1.2) saturate(0.8)" },
+  { name: "Breeze", css: "hue-rotate(170deg) saturate(1.2) brightness(1.15)" },
+  {
+    name: "Rustic",
+    css: "sepia(0.5) contrast(1.2) brightness(0.95) hue-rotate(5deg)",
+  },
+  { name: "Metro", css: "contrast(1.3) saturate(0.85) brightness(1.05)" },
+];
+
+// Beauty effect definitions
+interface BeautyEffect {
+  id: string;
+  name: string;
+  nameHi: string;
+  icon: React.ReactNode;
+  baseCss: string;
+  baseTransform?: string;
+}
+
+const BEAUTY_EFFECTS: BeautyEffect[] = [
+  {
+    id: "smooth",
+    name: "Smooth",
+    nameHi: "स्मूथ",
+    icon: <Droplets size={18} />,
+    baseCss: "blur(0.3px) brightness(1.05) contrast(0.95)",
+  },
+  {
+    id: "brighten",
+    name: "Brighten",
+    nameHi: "ब्राइट",
+    icon: <Sun size={18} />,
+    baseCss: "brightness(1.2) contrast(0.9)",
+  },
+  {
+    id: "slim",
+    name: "Slim",
+    nameHi: "स्लिम",
+    icon: <UserCheck size={18} />,
+    baseCss: "",
+    baseTransform: "scaleX(0.95)",
+  },
+  {
+    id: "bigenyes",
+    name: "Big Eyes",
+    nameHi: "बड़ी आँखें",
+    icon: <Eye size={18} />,
+    baseCss: "",
+    baseTransform: "scale(1.02)",
+  },
+  {
+    id: "lipstick",
+    name: "Lipstick",
+    nameHi: "लिपस्टिक",
+    icon: <SmilePlus size={18} />,
+    baseCss: "saturate(1.3) hue-rotate(5deg)",
+  },
+  {
+    id: "blush",
+    name: "Blush",
+    nameHi: "ब्लश",
+    icon: <Heart size={18} />,
+    baseCss: "sepia(0.1) saturate(1.2)",
+  },
+  {
+    id: "contour",
+    name: "Contour",
+    nameHi: "कंटूर",
+    icon: <Layers size={18} />,
+    baseCss: "contrast(1.1) brightness(0.95)",
+  },
+];
+
+function interpolateBeautyCss(effect: BeautyEffect, intensity: number): string {
+  if (intensity === 0 || !effect.baseCss) return "";
+  const t = intensity / 100;
+  const raw = effect.baseCss;
+  const blurMatch = raw.match(/blur\(([\d.]+)px\)/);
+  const brightnessMatch = raw.match(/brightness\(([\d.]+)\)/);
+  const contrastMatch = raw.match(/contrast\(([\d.]+)\)/);
+  const saturateMatch = raw.match(/saturate\(([\d.]+)\)/);
+  const hueMatch = raw.match(/hue-rotate\(([\d.]+)deg\)/);
+  const sepiaMatch = raw.match(/sepia\(([\d.]+)\)/);
+  const parts: string[] = [];
+  if (blurMatch)
+    parts.push(`blur(${(Number.parseFloat(blurMatch[1]) * t).toFixed(2)}px)`);
+  if (brightnessMatch) {
+    const base = Number.parseFloat(brightnessMatch[1]);
+    parts.push(`brightness(${(1 + (base - 1) * t).toFixed(3)})`);
+  }
+  if (contrastMatch) {
+    const base = Number.parseFloat(contrastMatch[1]);
+    parts.push(`contrast(${(1 + (base - 1) * t).toFixed(3)})`);
+  }
+  if (saturateMatch) {
+    const base = Number.parseFloat(saturateMatch[1]);
+    parts.push(`saturate(${(1 + (base - 1) * t).toFixed(3)})`);
+  }
+  if (hueMatch)
+    parts.push(
+      `hue-rotate(${(Number.parseFloat(hueMatch[1]) * t).toFixed(1)}deg)`,
+    );
+  if (sepiaMatch)
+    parts.push(`sepia(${(Number.parseFloat(sepiaMatch[1]) * t).toFixed(3)})`);
+  return parts.join(" ");
+}
+
+function interpolateBeautyTransform(
+  effect: BeautyEffect,
+  intensity: number,
+): string {
+  if (intensity === 0 || !effect.baseTransform) return "";
+  const t = intensity / 100;
+  const raw = effect.baseTransform;
+  const scaleXMatch = raw.match(/scaleX\(([\d.]+)\)/);
+  const scaleMatch = !scaleXMatch && raw.match(/scale\(([\d.]+)\)/);
+  if (scaleXMatch) {
+    const base = Number.parseFloat(scaleXMatch[1]);
+    return `scaleX(${(1 + (base - 1) * t).toFixed(4)})`;
+  }
+  if (scaleMatch) {
+    const base = Number.parseFloat(scaleMatch[1]);
+    return `scale(${(1 + (base - 1) * t).toFixed(4)})`;
+  }
+  return "";
+}
 
 export default function CameraReelModal({ open, onClose }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -38,14 +306,25 @@ export default function CameraReelModal({ open, onClose }: Props) {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [aiEditorOpen, setAiEditorOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState(0);
+
+  // Beauty state
+  const [beautyMode, setBeautyMode] = useState(false);
+  const [beautyPanelOpen, setBeautyPanelOpen] = useState(false);
+  const [selectedBeautyEffect, setSelectedBeautyEffect] = useState<
+    string | null
+  >(null);
+  const [beautyIntensity, setBeautyIntensity] = useState(70);
+
+  // Music state
+  const [selectedMusic, setSelectedMusic] = useState<Song | null>(null);
+  const [isMusicPickerOpen, setIsMusicPickerOpen] = useState(false);
 
   const MAX_SECONDS = 60;
 
   const stopStream = useCallback(() => {
     if (streamRef.current) {
-      for (const t of streamRef.current.getTracks()) {
-        t.stop();
-      }
+      for (const t of streamRef.current.getTracks()) t.stop();
       streamRef.current = null;
     }
   }, []);
@@ -92,6 +371,13 @@ export default function CameraReelModal({ open, onClose }: Props) {
       if (recordedUrl) URL.revokeObjectURL(recordedUrl);
       setRecordedUrl(null);
       setElapsed(0);
+      setSelectedFilter(0);
+      setBeautyMode(false);
+      setBeautyPanelOpen(false);
+      setSelectedBeautyEffect(null);
+      setBeautyIntensity(70);
+      setSelectedMusic(null);
+      setIsMusicPickerOpen(false);
     }
   }, [open]);
 
@@ -163,6 +449,37 @@ export default function CameraReelModal({ open, onClose }: Props) {
     setTimeout(() => setAiEditorOpen(true), 300);
   };
 
+  const toggleBeautyMode = () => {
+    const next = !beautyMode;
+    setBeautyMode(next);
+    setBeautyPanelOpen(next);
+    if (!next) setSelectedBeautyEffect(null);
+  };
+
+  const handleBeautyEffectSelect = (id: string) => {
+    setSelectedBeautyEffect((prev) => (prev === id ? null : id));
+  };
+
+  // Build combined CSS filter: color filter + beauty effects
+  const activeColorFilter = FILTERS[selectedFilter].css;
+  const activeBeautyEffect =
+    beautyMode && selectedBeautyEffect
+      ? BEAUTY_EFFECTS.find((e) => e.id === selectedBeautyEffect)
+      : null;
+  const beautyCss = activeBeautyEffect
+    ? interpolateBeautyCss(activeBeautyEffect, beautyIntensity)
+    : "";
+  const beautyTransform = activeBeautyEffect
+    ? interpolateBeautyTransform(activeBeautyEffect, beautyIntensity)
+    : "";
+  const combinedFilter =
+    [activeColorFilter !== "none" ? activeColorFilter : "", beautyCss]
+      .filter(Boolean)
+      .join(" ") || "none";
+  const mirrorTransform = facingMode === "user" ? "scaleX(-1)" : "";
+  const combinedTransform =
+    [mirrorTransform, beautyTransform].filter(Boolean).join(" ") || "none";
+
   const formatTime = (s: number) =>
     `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
   const progress = (elapsed / MAX_SECONDS) * 100;
@@ -203,19 +520,80 @@ export default function CameraReelModal({ open, onClose }: Props) {
                 <X size={20} className="text-white" />
               </button>
 
-              <div
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-[12px] font-semibold"
-                style={{
-                  background: "linear-gradient(135deg, #a855f7, #ec4899)",
-                }}
-              >
-                <Sparkles size={12} />
-                AI Reel
+              <div className="flex flex-col items-center gap-1">
+                <div
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-[12px] font-semibold"
+                  style={{
+                    background: "linear-gradient(135deg, #a855f7, #ec4899)",
+                  }}
+                >
+                  <Sparkles size={12} />
+                  AI Reel
+                </div>
+                {selectedFilter !== 0 && (
+                  <div className="px-2 py-0.5 rounded-full bg-black/60 text-[10px] text-purple-300 font-semibold">
+                    {FILTERS[selectedFilter].name}
+                  </div>
+                )}
+                {beautyMode && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, rgba(236,72,153,0.8), rgba(168,85,247,0.8))",
+                      color: "#fff",
+                      backdropFilter: "blur(8px)",
+                    }}
+                  >
+                    ✨ Beauty: ON
+                    {selectedBeautyEffect && (
+                      <span className="opacity-80">· {beautyIntensity}%</span>
+                    )}
+                  </motion.div>
+                )}
               </div>
 
               <div className="flex flex-col gap-2">
                 {mode === "camera" && (
                   <>
+                    {/* Music button */}
+                    <button
+                      type="button"
+                      data-ocid="camera_reel.music_button"
+                      onClick={() => setIsMusicPickerOpen(true)}
+                      disabled={isRecording}
+                      className="w-10 h-10 rounded-full backdrop-blur-sm flex items-center justify-center disabled:opacity-40 transition-all duration-200"
+                      style={{
+                        background: selectedMusic
+                          ? "linear-gradient(135deg, #a855f7, #ec4899)"
+                          : "rgba(0,0,0,0.5)",
+                        boxShadow: selectedMusic
+                          ? "0 0 12px rgba(168,85,247,0.7)"
+                          : "none",
+                      }}
+                    >
+                      <Music size={18} className="text-white" />
+                    </button>
+                    {/* Beauty toggle button */}
+                    <button
+                      type="button"
+                      data-ocid="camera_reel.beauty_toggle"
+                      onClick={toggleBeautyMode}
+                      disabled={isRecording}
+                      className="w-10 h-10 rounded-full backdrop-blur-sm flex items-center justify-center disabled:opacity-40 transition-all duration-200"
+                      style={{
+                        background: beautyMode
+                          ? "linear-gradient(135deg, #ec4899, #a855f7)"
+                          : "rgba(0,0,0,0.5)",
+                        boxShadow: beautyMode
+                          ? "0 0 12px rgba(236,72,153,0.7)"
+                          : "none",
+                      }}
+                    >
+                      <Sparkles size={18} className="text-white" />
+                    </button>
                     <button
                       type="button"
                       data-ocid="camera_reel.flip_button"
@@ -272,9 +650,10 @@ export default function CameraReelModal({ open, onClose }: Props) {
                   autoPlay
                   playsInline
                   muted
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-all duration-300"
                   style={{
-                    transform: facingMode === "user" ? "scaleX(-1)" : "none",
+                    transform: combinedTransform,
+                    filter: combinedFilter,
                   }}
                 />
                 {isRecording && (
@@ -300,7 +679,8 @@ export default function CameraReelModal({ open, onClose }: Props) {
                   autoPlay
                   loop
                   playsInline
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-all duration-300"
+                  style={{ filter: combinedFilter }}
                 >
                   <track kind="captions" />
                 </video>
@@ -315,10 +695,244 @@ export default function CameraReelModal({ open, onClose }: Props) {
               </div>
             )}
 
+            {/* Beauty Effects Panel */}
+            <AnimatePresence>
+              {beautyMode && beautyPanelOpen && mode === "camera" && (
+                <motion.div
+                  data-ocid="camera_reel.beauty.panel"
+                  className="absolute z-20"
+                  style={{
+                    bottom: selectedBeautyEffect ? 220 : 176,
+                    left: 12,
+                    right: 12,
+                  }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                >
+                  <div
+                    className="rounded-2xl p-3"
+                    style={{
+                      background: "rgba(0,0,0,0.55)",
+                      backdropFilter: "blur(16px)",
+                      border: "1px solid rgba(168,85,247,0.35)",
+                      boxShadow: "0 4px 24px rgba(168,85,247,0.15)",
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <Sparkles size={13} className="text-pink-400" />
+                        <span className="text-[11px] font-bold text-white/90">
+                          Beauty Effects
+                        </span>
+                        <span className="text-[10px] text-purple-300 font-medium">
+                          BeautyPlus
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        data-ocid="camera_reel.beauty.close_button"
+                        onClick={() => setBeautyPanelOpen(false)}
+                        className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center"
+                      >
+                        <X size={10} className="text-white/70" />
+                      </button>
+                    </div>
+                    <div
+                      className="flex items-center gap-2 overflow-x-auto pb-1"
+                      style={{ scrollbarWidth: "none" }}
+                    >
+                      {BEAUTY_EFFECTS.map((effect) => {
+                        const isActive = selectedBeautyEffect === effect.id;
+                        return (
+                          <button
+                            key={effect.id}
+                            type="button"
+                            data-ocid={`camera_reel.beauty.${effect.id}.button`}
+                            onClick={() => handleBeautyEffectSelect(effect.id)}
+                            className="flex-shrink-0 flex flex-col items-center gap-1.5 transition-all duration-200"
+                          >
+                            <div
+                              className="w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-200"
+                              style={{
+                                background: isActive
+                                  ? "linear-gradient(135deg, #ec4899, #a855f7)"
+                                  : "rgba(255,255,255,0.12)",
+                                border: isActive
+                                  ? "2px solid rgba(236,72,153,0.8)"
+                                  : "2px solid rgba(255,255,255,0.1)",
+                                boxShadow: isActive
+                                  ? "0 0 10px rgba(236,72,153,0.5)"
+                                  : "none",
+                                color: isActive
+                                  ? "#fff"
+                                  : "rgba(255,255,255,0.75)",
+                              }}
+                            >
+                              {effect.icon}
+                            </div>
+                            <span
+                              className="text-[9px] font-semibold leading-tight text-center"
+                              style={{
+                                color: isActive
+                                  ? "#f9a8d4"
+                                  : "rgba(255,255,255,0.6)",
+                              }}
+                            >
+                              {effect.name}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <AnimatePresence>
+                      {selectedBeautyEffect && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="mt-3 pt-2.5 border-t border-white/10">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-[10px] text-white/60 font-medium">
+                                Intensity
+                              </span>
+                              <span
+                                className="text-[11px] font-bold"
+                                style={{
+                                  background:
+                                    "linear-gradient(135deg, #ec4899, #a855f7)",
+                                  WebkitBackgroundClip: "text",
+                                  WebkitTextFillColor: "transparent",
+                                }}
+                              >
+                                {beautyIntensity}%
+                              </span>
+                            </div>
+                            <Slider
+                              data-ocid="camera_reel.beauty.intensity_slider"
+                              min={0}
+                              max={100}
+                              step={1}
+                              value={[beautyIntensity]}
+                              onValueChange={([v]) => setBeautyIntensity(v)}
+                              className="w-full"
+                            />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Filter Strip */}
+            <div
+              className="absolute left-0 right-0 z-10"
+              style={{ bottom: beautyMode && beautyPanelOpen ? 0 : 128 }}
+            >
+              <div
+                className="flex gap-2 px-3 py-2 overflow-x-auto"
+                style={{ scrollbarWidth: "none" }}
+              >
+                {FILTERS.map((filter, idx) => (
+                  <button
+                    key={filter.name}
+                    type="button"
+                    onClick={() => setSelectedFilter(idx)}
+                    className="flex-shrink-0 flex flex-col items-center gap-1"
+                  >
+                    <div
+                      className="w-12 h-12 rounded-xl overflow-hidden border-2 transition-all duration-200"
+                      style={{
+                        borderColor:
+                          selectedFilter === idx
+                            ? "#a855f7"
+                            : "rgba(255,255,255,0.2)",
+                        boxShadow:
+                          selectedFilter === idx
+                            ? "0 0 8px rgba(168,85,247,0.8)"
+                            : "none",
+                      }}
+                    >
+                      <div
+                        className="w-full h-full"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f64f59 100%)",
+                          filter: filter.css,
+                        }}
+                      />
+                    </div>
+                    <span
+                      className="text-[9px] font-semibold"
+                      style={{
+                        color:
+                          selectedFilter === idx
+                            ? "#c084fc"
+                            : "rgba(255,255,255,0.6)",
+                      }}
+                    >
+                      {filter.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Bottom controls */}
-            <div className="absolute bottom-0 left-0 right-0 pb-10 px-8 flex flex-col items-center gap-4">
+            <div className="absolute bottom-0 left-0 right-0 pb-8 px-8 flex flex-col items-center gap-3">
               {mode === "camera" ? (
                 <>
+                  {/* Music info bar */}
+                  <AnimatePresence>
+                    {selectedMusic && (
+                      <motion.div
+                        data-ocid="camera_reel.music_bar"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 8 }}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2 rounded-2xl"
+                        style={{
+                          background: "rgba(0,0,0,0.7)",
+                          backdropFilter: "blur(12px)",
+                          border: "1px solid rgba(168,85,247,0.35)",
+                        }}
+                      >
+                        <div
+                          className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, #a855f7, #ec4899)",
+                            animation: "spin 3s linear infinite",
+                          }}
+                        >
+                          <Music size={12} className="text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-xs font-semibold truncate">
+                            {selectedMusic.title}
+                          </p>
+                          <p className="text-white/50 text-[10px] truncate">
+                            {selectedMusic.artist}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          data-ocid="camera_reel.music_remove.button"
+                          onClick={() => setSelectedMusic(null)}
+                          className="flex-shrink-0 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center"
+                        >
+                          <X size={11} className="text-white/70" />
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   <div className="flex items-center justify-center gap-12 w-full">
                     <div className="w-12" />
                     {/* Record button */}
@@ -420,7 +1034,7 @@ export default function CameraReelModal({ open, onClose }: Props) {
               !cameraError &&
               !isLoading && (
                 <motion.div
-                  className="absolute bottom-36 left-1/2 -translate-x-1/2 pointer-events-none"
+                  className="absolute bottom-48 left-1/2 -translate-x-1/2 pointer-events-none"
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: [0, 0.7, 0], scale: [0.8, 1, 0.8] }}
                   transition={{
@@ -440,6 +1054,14 @@ export default function CameraReelModal({ open, onClose }: Props) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Music Picker Panel */}
+      <MusicPickerPanel
+        open={isMusicPickerOpen}
+        onClose={() => setIsMusicPickerOpen(false)}
+        selectedSong={selectedMusic}
+        onSelect={(song) => setSelectedMusic(song)}
+      />
 
       <ReelAIEditorModal
         open={aiEditorOpen}

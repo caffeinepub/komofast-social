@@ -1,16 +1,18 @@
-import { Bell, Compass, Film, GraduationCap, Home, User } from "lucide-react";
+import { Compass, Film, Home, User, UserPlus } from "lucide-react";
 import { useApp } from "../../context/AppContext";
+
+const PENDING_REQUESTS = 3;
 
 const NAV_ITEMS = [
   { label: "Home", icon: Home, path: "/" },
   { label: "Explore", icon: Compass, path: "/explore" },
   { label: "Reels", icon: Film, path: "/reels" },
-  { label: "Academy", icon: GraduationCap, path: "/academy" },
+  { label: "Friends", icon: UserPlus, path: "/friends" },
   { label: "Profile", icon: User, path: "/profile" },
 ];
 
 export default function BottomNav() {
-  const { navigate, currentPath, unreadNotifs } = useApp();
+  const { navigate, currentPath } = useApp();
 
   const isActive = (path: string) => {
     if (path === "/") return currentPath === "/" || currentPath === "";
@@ -23,7 +25,7 @@ export default function BottomNav() {
         {NAV_ITEMS.map((item) => {
           const active = isActive(item.path);
           const isReels = item.label === "Reels";
-          const isAcademy = item.label === "Academy";
+          const isFriends = item.label === "Friends";
 
           return (
             <button
@@ -39,13 +41,9 @@ export default function BottomNav() {
                     ? active
                       ? "text-purple-400"
                       : "text-komo-text-secondary"
-                    : isAcademy
-                      ? active
-                        ? "text-yellow-400"
-                        : "text-komo-text-secondary"
-                      : active
-                        ? "text-komo-blue"
-                        : "text-komo-text-secondary"
+                    : active
+                      ? "text-komo-blue"
+                      : "text-komo-text-secondary"
                 }`}
               >
                 {isReels ? (
@@ -66,33 +64,27 @@ export default function BottomNav() {
                     />
                   </div>
                 ) : (
-                  <item.icon size={22} strokeWidth={active ? 2.5 : 1.8} />
-                )}
-                {item.label === "Alerts" && unreadNotifs > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 text-[9px] font-bold bg-komo-badge rounded-full flex items-center justify-center text-white">
-                    {unreadNotifs > 9 ? "9+" : unreadNotifs}
-                  </span>
+                  <>
+                    <item.icon size={22} strokeWidth={active ? 2.5 : 1.8} />
+                    {isFriends && PENDING_REQUESTS > 0 && !active && (
+                      <span className="absolute -top-1 -right-1.5 w-4 h-4 bg-red-500 rounded-full text-[9px] text-white flex items-center justify-center font-bold border border-background">
+                        {PENDING_REQUESTS}
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
               {!isReels && (
                 <span
                   className={`text-[11px] font-medium ${
-                    isAcademy && active
-                      ? "text-yellow-400"
-                      : active
-                        ? "text-komo-blue"
-                        : "text-komo-text-muted"
+                    active ? "text-komo-blue" : "text-komo-text-muted"
                   }`}
                 >
                   {item.label}
                 </span>
               )}
               {active && !isReels && (
-                <span
-                  className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${
-                    isAcademy ? "bg-yellow-400" : "bg-komo-blue"
-                  }`}
-                />
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-komo-blue" />
               )}
             </button>
           );

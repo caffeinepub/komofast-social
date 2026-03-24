@@ -2,9 +2,10 @@ import { Badge } from "@/components/ui/badge";
 import {
   Bookmark,
   Flag,
-  Heart,
+  Link,
   MessageCircle,
   MoreHorizontal,
+  Send,
   Share2,
   UserX,
   Zap,
@@ -14,6 +15,15 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { useApp } from "../../context/AppContext";
 import ReportModal from "../modals/ReportModal";
+
+const REACTIONS = [
+  { key: "like", emoji: "👍", label: "Like", color: "#2fa8ff" },
+  { key: "love", emoji: "❤️", label: "Love", color: "#ef4444" },
+  { key: "haha", emoji: "😂", label: "Haha", color: "#f59e0b" },
+  { key: "wow", emoji: "😮", label: "Wow", color: "#f59e0b" },
+  { key: "sad", emoji: "😢", label: "Sad", color: "#f59e0b" },
+  { key: "angry", emoji: "😡", label: "Angry", color: "#f97316" },
+];
 
 interface PostCardProps {
   post: {
@@ -49,27 +59,53 @@ export default function PostCard({
   index,
 }: PostCardProps) {
   const { blockedUsers, blockUser } = useApp();
-  const [liked, setLiked] = useState(post.liked);
-  const [bookmarked, setBookmarked] = useState(post.bookmarked);
+  const [reaction, setReaction] = useState<string | null>(
+    post.liked ? "like" : null,
+  );
   const [likeCount, setLikeCount] = useState(post.likes);
-  const [heartBurst, setHeartBurst] = useState(false);
+  const [bookmarked, setBookmarked] = useState(post.bookmarked);
+  const [reactionPickerOpen, setReactionPickerOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showAnyway, setShowAnyway] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [burst, setBurst] = useState(false);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const isBlocked = blockedUsers.includes(post.username);
 
-  const handleLike = () => {
-    setLiked((prev) => {
-      const next = !prev;
-      setLikeCount((c) => (next ? c + 1 : c - 1));
-      if (next) {
-        setHeartBurst(true);
-        setTimeout(() => setHeartBurst(false), 600);
+  const currentReaction = REACTIONS.find((r) => r.key === reaction);
+
+  const handleSelectReaction = (key: string) => {
+    if (reaction === key) {
+      setReaction(null);
+      setLikeCount((c) => c - 1);
+    } else {
+      if (!reaction) setLikeCount((c) => c + 1);
+      setReaction(key);
+      if (key === "love" || key === "like") {
+        setBurst(true);
+        setTimeout(() => setBurst(false), 600);
       }
-      return next;
-    });
+    }
+    setReactionPickerOpen(false);
+  };
+
+  const handleTapLike = () => {
+    if (!reactionPickerOpen) {
+      handleSelectReaction("like");
+    }
+  };
+
+  const handleLongPressStart = () => {
+    longPressTimer.current = setTimeout(() => {
+      setReactionPickerOpen(true);
+    }, 400);
+  };
+
+  const handleLongPressEnd = () => {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
   };
 
   const handleBlock = () => {
@@ -78,7 +114,6 @@ export default function PostCard({
     setMenuOpen(false);
   };
 
-  // Blocked post collapsed view
   if (isBlocked && !showAnyway) {
     return (
       <motion.div
@@ -160,7 +195,6 @@ export default function PostCard({
               <MoreHorizontal size={18} />
             </button>
 
-            {/* Dropdown menu */}
             <AnimatePresence>
               {menuOpen && (
                 <>
@@ -188,8 +222,7 @@ export default function PostCard({
                         setReportOpen(true);
                       }}
                     >
-                      <Flag size={14} />
-                      Report Post
+                      <Flag size={14} /> Report Post
                     </button>
                     <div className="h-px bg-white/5" />
                     <button
@@ -198,8 +231,7 @@ export default function PostCard({
                       className="flex items-center gap-2.5 w-full px-4 py-3 text-[13px] text-red-400 hover:bg-white/5 transition-colors"
                       onClick={handleBlock}
                     >
-                      <UserX size={14} />
-                      Block @{post.username}
+                      <UserX size={14} /> Block @{post.username}
                     </button>
                   </motion.div>
                 </>
@@ -229,39 +261,90 @@ export default function PostCard({
         {/* Actions */}
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-1">
-            {/* Like */}
-            <motion.button
-              data-ocid={`feed.post.like.${index}`}
-              onClick={handleLike}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl hover:bg-accent transition-colors group"
-              whileTap={{ scale: 0.85 }}
-            >
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={liked ? "liked" : "notliked"}
-                  initial={{ scale: 0.5 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0.5 }}
-                >
-                  <Heart
-                    size={19}
-                    className={
-                      liked
-                        ? "fill-komo-red text-komo-red"
-                        : "text-komo-text-secondary group-hover:text-komo-red"
-                    }
-                    strokeWidth={liked ? 0 : 2}
-                  />
-                </motion.span>
+            {/* Reaction Button */}
+            <div className="relative">
+              <AnimatePresence>
+                {reactionPickerOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setReactionPickerOpen(false)}
+                      onKeyDown={() => setReactionPickerOpen(false)}
+                      role="button"
+                      tabIndex={-1}
+                      aria-label="Close reaction picker"
+                    />
+                    <motion.div
+                      data-ocid={`feed.post.popover.${index}`}
+                      className="absolute bottom-12 left-0 z-50 flex items-center gap-1 px-3 py-2 rounded-full"
+                      style={{
+                        background: "rgba(20,26,36,0.95)",
+                        backdropFilter: "blur(20px)",
+                        border: "1px solid rgba(255,255,255,0.12)",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                      }}
+                      initial={{ opacity: 0, scale: 0.6, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.6, y: 10 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 25,
+                      }}
+                    >
+                      {REACTIONS.map((r, ri) => (
+                        <motion.button
+                          key={r.key}
+                          type="button"
+                          onClick={() => handleSelectReaction(r.key)}
+                          className="flex flex-col items-center gap-0.5 group"
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: ri * 0.04 }}
+                          whileHover={{ scale: 1.35, y: -4 }}
+                          title={r.label}
+                        >
+                          <span className="text-[22px] leading-none">
+                            {r.emoji}
+                          </span>
+                          <span
+                            className="text-[9px] font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+                            style={{ color: r.color }}
+                          >
+                            {r.label}
+                          </span>
+                        </motion.button>
+                      ))}
+                    </motion.div>
+                  </>
+                )}
               </AnimatePresence>
-              <span
-                className={`text-[13px] font-medium ${
-                  liked ? "text-komo-red" : "text-komo-text-secondary"
-                }`}
+
+              <motion.button
+                data-ocid={`feed.post.like.${index}`}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl hover:bg-accent transition-colors"
+                whileTap={{ scale: 0.85 }}
+                onClick={handleTapLike}
+                onMouseEnter={() => setReactionPickerOpen(true)}
+                onMouseLeave={() =>
+                  setTimeout(() => setReactionPickerOpen(false), 300)
+                }
+                onTouchStart={handleLongPressStart}
+                onTouchEnd={handleLongPressEnd}
               >
-                {formatCount(likeCount)}
-              </span>
-            </motion.button>
+                <span className="text-[19px] leading-none">
+                  {currentReaction ? currentReaction.emoji : "👍"}
+                </span>
+                <span
+                  className="text-[13px] font-medium"
+                  style={{
+                    color: currentReaction ? currentReaction.color : "#6b7280",
+                  }}
+                >
+                  {formatCount(likeCount)}
+                </span>
+              </motion.button>
+            </div>
 
             {/* Comment */}
             <button
@@ -279,20 +362,91 @@ export default function PostCard({
               </span>
             </button>
 
-            {/* Share */}
-            <button
-              type="button"
-              data-ocid={`feed.post.share.${index}`}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl hover:bg-accent transition-colors group"
-            >
-              <Share2
-                size={19}
-                className="text-komo-text-secondary group-hover:text-komo-purple"
-              />
-              <span className="text-[13px] font-medium text-komo-text-secondary">
-                {formatCount(post.shares)}
-              </span>
-            </button>
+            {/* Share dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                data-ocid={`feed.post.share.${index}`}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl hover:bg-accent transition-colors group"
+                onClick={() => setShareOpen((v) => !v)}
+              >
+                <Share2
+                  size={19}
+                  className="text-komo-text-secondary group-hover:text-komo-purple"
+                />
+                <span className="text-[13px] font-medium text-komo-text-secondary">
+                  {formatCount(post.shares)}
+                </span>
+              </button>
+
+              <AnimatePresence>
+                {shareOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setShareOpen(false)}
+                      onKeyDown={() => setShareOpen(false)}
+                      role="button"
+                      tabIndex={-1}
+                      aria-label="Close share menu"
+                    />
+                    <motion.div
+                      data-ocid={`feed.post.dropdown_menu.share.${index}`}
+                      className="absolute bottom-12 left-0 z-50 bg-[#1A2030] border border-white/10 rounded-2xl shadow-2xl min-w-[200px] overflow-hidden"
+                      initial={{ opacity: 0, scale: 0.9, y: 5 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.9, y: 5 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <div className="px-4 py-2 border-b border-white/5">
+                        <p className="text-[11px] text-komo-text-muted font-medium uppercase tracking-wider">
+                          Share to
+                        </p>
+                      </div>
+                      {[
+                        {
+                          icon: "📖",
+                          label: "Share to Story",
+                          action: () => toast.success("Shared to your story!"),
+                        },
+                        {
+                          icon: Link,
+                          label: "Copy Link",
+                          action: () => {
+                            toast.success("Link copied!");
+                          },
+                        },
+                        {
+                          icon: Send,
+                          label: "Send in Chat",
+                          action: () => toast.success("Opening chat..."),
+                        },
+                      ].map((opt) => (
+                        <button
+                          key={opt.label}
+                          type="button"
+                          className="flex items-center gap-3 w-full px-4 py-3 text-[13px] text-foreground hover:bg-white/5 transition-colors"
+                          onClick={() => {
+                            opt.action();
+                            setShareOpen(false);
+                          }}
+                        >
+                          {typeof opt.icon === "string" ? (
+                            <span className="text-[16px]">{opt.icon}</span>
+                          ) : (
+                            <opt.icon
+                              size={15}
+                              className="text-komo-text-secondary"
+                            />
+                          )}
+                          {opt.label}
+                        </button>
+                      ))}
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
           {/* Bookmark */}
@@ -314,14 +468,16 @@ export default function PostCard({
           </motion.button>
         </div>
 
-        {heartBurst && (
+        {burst && (
           <motion.div
             className="absolute inset-0 flex items-center justify-center pointer-events-none"
             initial={{ opacity: 1, scale: 0.5 }}
             animate={{ opacity: 0, scale: 2.5 }}
             transition={{ duration: 0.6 }}
           >
-            <Heart size={80} className="fill-komo-red text-komo-red" />
+            <span className="text-[80px]">
+              {currentReaction?.emoji ?? "👍"}
+            </span>
           </motion.div>
         )}
       </motion.article>
