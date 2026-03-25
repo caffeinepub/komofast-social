@@ -18,7 +18,6 @@ import {
   Play,
   Settings,
   Share2,
-  Shield,
   ShoppingBag,
   Star,
   TrendingUp,
@@ -211,7 +210,7 @@ export default function Profile() {
               type="button"
               data-ocid="profile.settings.button"
               className="w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/50 transition-colors"
-              onClick={() => toast.info("Settings coming soon!")}
+              onClick={() => navigate("/settings")}
             >
               <Settings size={16} />
             </button>
@@ -253,14 +252,6 @@ export default function Profile() {
                   <Zap size={10} className="mr-0.5" /> CREATOR
                 </Badge>
               )}
-              {/* Director demo badge */}
-              <Badge
-                data-ocid="profile.director.badge"
-                className="bg-amber-400/10 text-amber-400 border-amber-400/30 text-[10px] cursor-pointer hover:bg-amber-400/20 transition-colors"
-                onClick={() => navigate("/director")}
-              >
-                <Shield size={10} className="mr-0.5" /> DIRECTOR
-              </Badge>
             </div>
             <p className="text-[13px] text-komo-text-muted">
               @{profile.username}
@@ -982,6 +973,12 @@ export default function Profile() {
               path: "/data-protection",
               emoji: "🛡️",
               ocid: "profile.dataprotection.link",
+            },
+            {
+              label: "Community Guidelines",
+              path: "/community-guidelines",
+              emoji: "📋",
+              ocid: "profile.community_guidelines.link",
             },
           ].map((item, idx, arr) => (
             <button

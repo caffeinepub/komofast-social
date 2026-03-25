@@ -1,4 +1,4 @@
-import { ShoppingBag, ShoppingCart } from "lucide-react";
+import { ShoppingBag, ShoppingCart, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
 import ProductCard from "../components/marketplace/ProductCard";
@@ -26,25 +26,43 @@ export default function Marketplace() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <ShoppingBag size={22} className="text-komo-blue" />
           <h1 className="text-[20px] font-bold text-foreground">Marketplace</h1>
         </div>
-        <button
-          type="button"
-          data-ocid="marketplace.cart.button"
-          onClick={() => navigate("/cart")}
-          className="relative flex items-center gap-2 px-4 py-2 rounded-full komo-gradient text-white text-[13px] font-medium"
-        >
-          <ShoppingCart size={15} />
-          <span>Cart</span>
-          {cartCount > 0 && (
-            <span className="w-5 h-5 rounded-full bg-white/20 text-[11px] font-bold flex items-center justify-center">
-              {cartCount}
-            </span>
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Digital Market button */}
+          <button
+            type="button"
+            data-ocid="marketplace.digital_market.button"
+            onClick={() => navigate("/digital-market")}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full text-[12px] font-semibold text-white"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(168,85,247,0.25), rgba(47,168,255,0.2))",
+              border: "1px solid rgba(168,85,247,0.4)",
+              color: "#c084fc",
+            }}
+          >
+            <Sparkles size={13} />
+            Digital Market 💎
+          </button>
+          <button
+            type="button"
+            data-ocid="marketplace.cart.button"
+            onClick={() => navigate("/cart")}
+            className="relative flex items-center gap-2 px-4 py-2 rounded-full komo-gradient text-white text-[13px] font-medium"
+          >
+            <ShoppingCart size={15} />
+            <span>Cart</span>
+            {cartCount > 0 && (
+              <span className="w-5 h-5 rounded-full bg-white/20 text-[11px] font-bold flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Category tabs */}

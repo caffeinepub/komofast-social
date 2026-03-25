@@ -15,6 +15,7 @@ import {
   Rocket,
   ShieldCheck,
   Star,
+  Clapperboard as StudioIcon,
   TrendingUp,
   Trophy,
   Users,
@@ -428,7 +429,7 @@ export default function CreatorDashboard() {
             </motion.div>
 
             {/* Apply CTA */}
-            <motion.div variants={item} className="pt-2">
+            <motion.div variants={item} className="pt-2 space-y-3">
               <Button
                 data-ocid="creator.apply.primary_button"
                 className="w-full komo-gradient border-0 text-white font-bold text-[15px] rounded-2xl"
@@ -449,7 +450,20 @@ export default function CreatorDashboard() {
               >
                 <Rocket size={18} className="mr-2" /> Apply for Monetization
               </Button>
-              <p className="text-center text-[11px] text-komo-text-muted mt-2">
+
+              {/* Open Creator Studio */}
+              <Button
+                data-ocid="creator.open_studio.secondary_button"
+                variant="outline"
+                className="w-full rounded-2xl font-semibold text-[14px] border-komo-border text-foreground hover:bg-white/5"
+                style={{ height: "48px" }}
+                onClick={() => navigate("/creator-studio")}
+              >
+                <StudioIcon size={16} className="mr-2 text-komo-blue" />
+                Open Creator Studio →
+              </Button>
+
+              <p className="text-center text-[11px] text-komo-text-muted">
                 Review takes 3–5 business days · India eligible ✓
               </p>
             </motion.div>

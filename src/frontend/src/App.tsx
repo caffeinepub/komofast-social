@@ -30,11 +30,19 @@ const TermsConditions = lazy(() => import("./pages/TermsConditions"));
 const DataProtection = lazy(() => import("./pages/DataProtection"));
 const Groups = lazy(() => import("./pages/Groups"));
 const Watch = lazy(() => import("./pages/Watch"));
-const Director = lazy(() => import("./pages/Director"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const LanguageSettings = lazy(() => import("./pages/LanguageSettings"));
 const FriendsPage = lazy(() => import("./pages/Friends"));
 const ChatPage = lazy(() => import("./pages/Chat"));
+const CommunityGuidelines = lazy(() => import("./pages/CommunityGuidelines"));
+const Settings = lazy(() => import("./pages/Settings"));
+const PrivacyCenter = lazy(() => import("./pages/PrivacyCenter"));
+const CreatorStudio = lazy(() => import("./pages/CreatorStudio"));
+const DigitalMarket = lazy(() => import("./pages/DigitalMarket"));
+const GroupVideoCall = lazy(() => import("./pages/GroupVideoCall"));
+const LiveStream = lazy(() => import("./pages/LiveStream"));
+const Events = lazy(() => import("./pages/Events"));
+const VideoEditor = lazy(() => import("./pages/VideoEditor"));
 
 function PageLoader() {
   return (
@@ -83,6 +91,20 @@ function Router() {
       </Suspense>
     );
   }
+  if (currentPath === "/community-guidelines") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <CommunityGuidelines />
+      </Suspense>
+    );
+  }
+  if (currentPath === "/privacy-center") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <PrivacyCenter />
+      </Suspense>
+    );
+  }
 
   if (!isLoggedIn) {
     return <Login />;
@@ -103,9 +125,15 @@ function Router() {
     if (currentPath === "/earning-account") return <EarningAccount />;
     if (currentPath === "/groups") return <Groups />;
     if (currentPath === "/watch") return <Watch />;
-    if (currentPath === "/director") return <Director />;
     if (currentPath === "/friends") return <FriendsPage />;
     if (currentPath === "/chat") return <ChatPage />;
+    if (currentPath === "/settings") return <Settings />;
+    if (currentPath === "/creator-studio") return <CreatorStudio />;
+    if (currentPath === "/digital-market") return <DigitalMarket />;
+    if (currentPath === "/group-call") return <GroupVideoCall />;
+    if (currentPath === "/live") return <LiveStream />;
+    if (currentPath === "/video-editor") return <VideoEditor />;
+    if (currentPath === "/events") return <Events />;
     return <Home />;
   };
 

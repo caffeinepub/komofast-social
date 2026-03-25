@@ -11,6 +11,7 @@ import {
   MicOff,
   Music,
   RefreshCw,
+  Settings2,
   SmilePlus,
   Sparkles,
   Sun,
@@ -320,6 +321,13 @@ export default function CameraReelModal({ open, onClose }: Props) {
   const [selectedMusic, setSelectedMusic] = useState<Song | null>(null);
   const [isMusicPickerOpen, setIsMusicPickerOpen] = useState(false);
 
+  // Video Quality / Resolution state
+  const [qualityPanelOpen, setQualityPanelOpen] = useState(false);
+  const [selectedResolution, setSelectedResolution] = useState<"1080p" | "4K">(
+    "1080p",
+  );
+  const [selectedFps, setSelectedFps] = useState<30 | 60>(30);
+
   const MAX_SECONDS = 60;
 
   const stopStream = useCallback(() => {
@@ -384,6 +392,10 @@ export default function CameraReelModal({ open, onClose }: Props) {
   const flipCamera = () => {
     const next = facingMode === "user" ? "environment" : "user";
     setFacingMode(next);
+    if (next === "user") {
+      setBeautyMode(true);
+      setBeautyPanelOpen(true);
+    }
     startCamera(next, micEnabled);
   };
 
@@ -535,6 +547,15 @@ export default function CameraReelModal({ open, onClose }: Props) {
                     {FILTERS[selectedFilter].name}
                   </div>
                 )}
+                {facingMode === "user" && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/80 text-white backdrop-blur-sm"
+                  >
+                    SELFIE
+                  </motion.div>
+                )}
                 {beautyMode && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
@@ -615,6 +636,20 @@ export default function CameraReelModal({ open, onClose }: Props) {
                       ) : (
                         <MicOff size={18} className="text-red-400" />
                       )}
+                    </button>
+                    {/* Quality settings button */}
+                    <button
+                      type="button"
+                      data-ocid="camera_reel.quality_button"
+                      onClick={() => setQualityPanelOpen(true)}
+                      disabled={isRecording}
+                      className="w-10 h-10 rounded-full backdrop-blur-sm flex items-center justify-center disabled:opacity-40 transition-all duration-200 relative"
+                      style={{ background: "rgba(0,0,0,0.5)" }}
+                    >
+                      <Settings2 size={18} className="text-white" />
+                      <span className="absolute -bottom-0.5 -right-0.5 text-[8px] font-bold text-purple-300 leading-none">
+                        {selectedResolution}
+                      </span>
                     </button>
                   </>
                 )}
@@ -1051,6 +1086,196 @@ export default function CameraReelModal({ open, onClose }: Props) {
                   />
                 </motion.div>
               )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Video Quality Panel */}
+      <AnimatePresence>
+        {qualityPanelOpen && (
+          <motion.div
+            className="fixed inset-0 z-[80] flex items-end"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setQualityPanelOpen(false)}
+          >
+            <motion.div
+              className="w-full rounded-t-3xl p-6 pb-10"
+              style={{
+                background: "linear-gradient(180deg, #1a0a2e 0%, #0d0618 100%)",
+              }}
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Handle */}
+              <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-5" />
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-white font-bold text-lg">Video Quality</h3>
+                <button
+                  type="button"
+                  onClick={() => setQualityPanelOpen(false)}
+                  className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"
+                >
+                  <X size={16} className="text-white" />
+                </button>
+              </div>
+
+              {/* Resolution */}
+              <p className="text-white/50 text-xs font-semibold uppercase tracking-widest mb-3">
+                Resolution
+              </p>
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                {[
+                  {
+                    key: "1080p" as const,
+                    label: "1080p Full HD",
+                    sub: "1920 × 1080 / 1080 × 1920",
+                    badge: "✅ Best",
+                    color: "#a855f7",
+                  },
+                  {
+                    key: "4K" as const,
+                    label: "4K Ultra HD",
+                    sub: "3840 × 2160",
+                    badge: "⚡ High Storage",
+                    color: "#ec4899",
+                  },
+                ].map((r) => (
+                  <button
+                    key={r.key}
+                    type="button"
+                    onClick={() => setSelectedResolution(r.key)}
+                    className="relative rounded-2xl p-4 text-left transition-all duration-200 border-2"
+                    style={{
+                      background:
+                        selectedResolution === r.key
+                          ? `${r.color}20`
+                          : "rgba(255,255,255,0.05)",
+                      borderColor:
+                        selectedResolution === r.key
+                          ? r.color
+                          : "rgba(255,255,255,0.1)",
+                    }}
+                  >
+                    {selectedResolution === r.key && (
+                      <div
+                        className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center"
+                        style={{ background: r.color }}
+                      >
+                        <Check size={11} className="text-white" />
+                      </div>
+                    )}
+                    <div className="text-white font-bold text-sm mb-0.5">
+                      {r.label}
+                    </div>
+                    <div className="text-white/50 text-[10px] mb-1.5">
+                      {r.sub}
+                    </div>
+                    <div
+                      className="text-[10px] font-semibold"
+                      style={{ color: r.color }}
+                    >
+                      {r.badge}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* 1080p info box */}
+              {selectedResolution === "1080p" && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-xl p-3 mb-5 text-xs text-purple-200"
+                  style={{
+                    background: "rgba(168,85,247,0.15)",
+                    border: "1px solid rgba(168,85,247,0.3)",
+                  }}
+                >
+                  <span className="font-bold text-purple-300">Reels Mode:</span>{" "}
+                  1080 × 1920 (9:16 portrait) &nbsp;|&nbsp;{" "}
+                  <span className="font-bold text-purple-300">Landscape:</span>{" "}
+                  1920 × 1080 (16:9)
+                </motion.div>
+              )}
+
+              {/* FPS */}
+              <p className="text-white/50 text-xs font-semibold uppercase tracking-widest mb-3">
+                Frame Rate (FPS)
+              </p>
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                {[
+                  {
+                    key: 30 as const,
+                    label: "30 FPS",
+                    sub: "Standard · Lower battery",
+                    badge: "🔋 Recommended",
+                  },
+                  {
+                    key: 60 as const,
+                    label: "60 FPS",
+                    sub: "Smooth · Higher battery",
+                    badge: "🎬 Cinematic",
+                  },
+                ].map((f) => (
+                  <button
+                    key={f.key}
+                    type="button"
+                    onClick={() => setSelectedFps(f.key)}
+                    className="relative rounded-2xl p-4 text-left transition-all duration-200 border-2"
+                    style={{
+                      background:
+                        selectedFps === f.key
+                          ? "rgba(168,85,247,0.2)"
+                          : "rgba(255,255,255,0.05)",
+                      borderColor:
+                        selectedFps === f.key
+                          ? "#a855f7"
+                          : "rgba(255,255,255,0.1)",
+                    }}
+                  >
+                    {selectedFps === f.key && (
+                      <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
+                        <Check size={11} className="text-white" />
+                      </div>
+                    )}
+                    <div className="text-white font-bold text-sm mb-0.5">
+                      {f.label}
+                    </div>
+                    <div className="text-white/50 text-[10px] mb-1.5">
+                      {f.sub}
+                    </div>
+                    <div className="text-[10px] font-semibold text-purple-300">
+                      {f.badge}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Format info */}
+              <div
+                className="rounded-xl p-3 text-xs"
+                style={{
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                }}
+              >
+                <div className="flex justify-between text-white/60 mb-1">
+                  <span>Format</span>
+                  <span className="text-white font-semibold">MP4 (H.264)</span>
+                </div>
+                <div className="flex justify-between text-white/60">
+                  <span>Bitrate</span>
+                  <span className="text-white font-semibold">
+                    10 – 20 Mbps (High)
+                  </span>
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
