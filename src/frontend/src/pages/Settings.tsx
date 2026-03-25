@@ -628,6 +628,32 @@ export default function Settings() {
             ))}
           </div>
         </div>
+        <Divider />
+        <button
+          type="button"
+          data-ocid="settings.creator_privacy.link"
+          onClick={() => navigate("/creator-privacy")}
+          className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-white/5 transition-colors"
+        >
+          <div
+            className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(47,168,255,0.18), rgba(168,85,247,0.22))",
+            }}
+          >
+            <span className="text-[14px]">2728</span>
+          </div>
+          <div className="flex-1">
+            <span className="text-[13px] font-medium text-white/80">
+              Creator Privacy
+            </span>
+            <p className="text-[11px] text-white/40 mt-0.5">
+              Public visibility for your creator profile
+            </p>
+          </div>
+          <ChevronRight size={15} className="text-white/25" />
+        </button>
       </SectionCard>
 
       {/* ── NOTIFICATIONS ── */}

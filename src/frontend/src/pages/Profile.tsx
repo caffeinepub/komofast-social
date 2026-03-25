@@ -692,6 +692,45 @@ export default function Profile() {
               </Button>
             </div>
 
+            {/* Donation Link Card */}
+            <div
+              className="rounded-2xl p-4 flex items-center gap-4"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(244,114,182,0.12), rgba(168,85,247,0.18))",
+                border: "1px solid rgba(244,114,182,0.35)",
+                boxShadow: "0 4px 16px rgba(244,114,182,0.1)",
+              }}
+            >
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center text-[22px] flex-shrink-0"
+                style={{
+                  background: "linear-gradient(135deg, #f472b6, #a855f7)",
+                }}
+              >
+                💝
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-bold text-foreground">
+                  Donation Link
+                </p>
+                <p className="text-[12px] text-komo-text-muted leading-snug mt-0.5">
+                  Accept donations from your supporters
+                </p>
+              </div>
+              <Button
+                data-ocid="profile.donate.primary_button"
+                size="sm"
+                className="border-0 text-white text-[12px] h-8 px-3 flex-shrink-0"
+                style={{
+                  background: "linear-gradient(135deg, #f472b6, #a855f7)",
+                }}
+                onClick={() => navigate("/donate")}
+              >
+                Open
+              </Button>
+            </div>
+
             {/* Honor Tier Card */}
             <div
               className="rounded-2xl p-5 relative overflow-hidden"

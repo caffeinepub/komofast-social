@@ -43,6 +43,8 @@ const GroupVideoCall = lazy(() => import("./pages/GroupVideoCall"));
 const LiveStream = lazy(() => import("./pages/LiveStream"));
 const Events = lazy(() => import("./pages/Events"));
 const VideoEditor = lazy(() => import("./pages/VideoEditor"));
+const DonatePage = lazy(() => import("./pages/DonatePage"));
+const CreatorPrivacy = lazy(() => import("./pages/CreatorPrivacy"));
 
 function PageLoader() {
   return (
@@ -105,6 +107,13 @@ function Router() {
       </Suspense>
     );
   }
+  if (currentPath === "/donate") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <DonatePage />
+      </Suspense>
+    );
+  }
 
   if (!isLoggedIn) {
     return <Login />;
@@ -134,6 +143,8 @@ function Router() {
     if (currentPath === "/live") return <LiveStream />;
     if (currentPath === "/video-editor") return <VideoEditor />;
     if (currentPath === "/events") return <Events />;
+    if (currentPath === "/donate") return <DonatePage />;
+    if (currentPath === "/creator-privacy") return <CreatorPrivacy />;
     return <Home />;
   };
 
