@@ -7,6 +7,7 @@ import {
   FlipHorizontal,
   Heart,
   Layers,
+  LayoutGrid,
   MapPin,
   Mic,
   MicOff,
@@ -334,6 +335,53 @@ export default function CameraReelModal({ open, onClose }: Props) {
     "1080p",
   );
   const [selectedFps, setSelectedFps] = useState<30 | 60>(30);
+
+  // Aspect Ratio state
+  type AspectRatioKey = "9:16" | "1:1" | "4:5" | "16:9";
+  const ASPECT_RATIOS: {
+    key: AspectRatioKey;
+    label: string;
+    icon: string;
+    resolution: string;
+    badge?: string;
+    duration: string;
+    storyInfo?: string;
+  }[] = [
+    {
+      key: "9:16",
+      label: "Reels / Story",
+      icon: "📱",
+      resolution: "1080 × 1920",
+      badge: "Best for Reels",
+      duration: "3 – 90 sec",
+      storyInfo: "Stories: 15 sec/slide",
+    },
+    {
+      key: "1:1",
+      label: "Square",
+      icon: "⬜",
+      resolution: "1080 × 1080",
+      duration: "3 – 60 sec",
+    },
+    {
+      key: "4:5",
+      label: "Portrait",
+      icon: "🖼️",
+      resolution: "1080 × 1350",
+      badge: "Best Engagement 👍",
+      duration: "3 – 60 sec",
+    },
+    {
+      key: "16:9",
+      label: "Landscape",
+      icon: "🖥️",
+      resolution: "1080 × 566",
+      duration: "3 – 60 sec",
+    },
+  ];
+  const [selectedRatio, setSelectedRatio] = useState<AspectRatioKey>("9:16");
+  const [ratioPanelOpen, setRatioPanelOpen] = useState(false);
+  const currentRatioInfo = ASPECT_RATIOS.find((r) => r.key === selectedRatio)!;
 
   const MAX_SECONDS = 60;
 
@@ -697,6 +745,20 @@ export default function CameraReelModal({ open, onClose }: Props) {
                         {selectedResolution}
                       </span>
                     </button>
+                    {/* Aspect Ratio button */}
+                    <button
+                      type="button"
+                      data-ocid="camera_reel.ratio_button"
+                      onClick={() => setRatioPanelOpen(true)}
+                      disabled={isRecording}
+                      className="w-10 h-10 rounded-full backdrop-blur-sm flex items-center justify-center disabled:opacity-40 transition-all duration-200 relative"
+                      style={{ background: "rgba(0,0,0,0.5)" }}
+                    >
+                      <LayoutGrid size={16} className="text-white" />
+                      <span className="absolute -bottom-0.5 -right-0.5 text-[8px] font-bold text-pink-300 leading-none">
+                        {selectedRatio}
+                      </span>
+                    </button>
                     {/* Location button */}
                     <button
                       type="button"
@@ -796,6 +858,21 @@ export default function CameraReelModal({ open, onClose }: Props) {
                     </span>
                   </div>
                 )}
+                {/* Ratio badge on preview */}
+                <div
+                  data-ocid="camera_reel.ratio_badge"
+                  className="absolute top-4 left-4 flex items-center gap-1 px-2 py-0.5 rounded-full"
+                  style={{
+                    background: "rgba(0,0,0,0.6)",
+                    backdropFilter: "blur(6px)",
+                    border: "1px solid rgba(168,85,247,0.35)",
+                  }}
+                >
+                  <span className="text-[10px]">{currentRatioInfo.icon}</span>
+                  <span className="text-white text-[10px] font-bold">
+                    {selectedRatio}
+                  </span>
+                </div>
                 {locationError && (
                   <div
                     data-ocid="camera_reel.location_error"
@@ -1388,6 +1465,136 @@ export default function CameraReelModal({ open, onClose }: Props) {
                     10 – 20 Mbps (High)
                   </span>
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Aspect Ratio Panel */}
+      <AnimatePresence>
+        {ratioPanelOpen && (
+          <motion.div
+            data-ocid="camera_reel.ratio_panel"
+            className="fixed inset-0 z-[80] flex items-end"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setRatioPanelOpen(false)}
+          >
+            <motion.div
+              className="w-full rounded-t-3xl p-6 pb-10"
+              style={{
+                background: "linear-gradient(180deg, #1a0a2e 0%, #0d0618 100%)",
+              }}
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-5" />
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-white font-bold text-lg">
+                  Aspect Ratio / Format
+                </h3>
+                <button
+                  type="button"
+                  data-ocid="camera_reel.ratio_panel.close_button"
+                  onClick={() => setRatioPanelOpen(false)}
+                  className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"
+                >
+                  <X size={16} className="text-white" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                {ASPECT_RATIOS.map((r) => (
+                  <button
+                    key={r.key}
+                    type="button"
+                    data-ocid="camera_reel.ratio_panel.ratio_button"
+                    onClick={() => {
+                      setSelectedRatio(r.key);
+                      setRatioPanelOpen(false);
+                    }}
+                    className="relative rounded-2xl p-4 text-left transition-all duration-200 border-2"
+                    style={{
+                      background:
+                        selectedRatio === r.key
+                          ? "rgba(168,85,247,0.15)"
+                          : "rgba(255,255,255,0.05)",
+                      borderColor:
+                        selectedRatio === r.key
+                          ? "#a855f7"
+                          : "rgba(255,255,255,0.1)",
+                    }}
+                  >
+                    {selectedRatio === r.key && (
+                      <div
+                        className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center"
+                        style={{ background: "#a855f7" }}
+                      >
+                        <Check size={11} className="text-white" />
+                      </div>
+                    )}
+                    <div className="text-lg mb-1">{r.icon}</div>
+                    <div className="text-white font-bold text-sm mb-0.5">
+                      {r.label}
+                    </div>
+                    <div className="text-purple-300 font-mono text-[11px] mb-0.5">
+                      {r.key}
+                    </div>
+                    <div className="text-white/50 text-[10px]">
+                      {r.resolution}
+                    </div>
+                    {r.badge && (
+                      <div
+                        className="mt-1.5 inline-block px-2 py-0.5 rounded-full text-[9px] font-bold text-white"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #a855f7, #ec4899)",
+                        }}
+                      >
+                        {r.badge}
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* Format info */}
+              <div
+                className="rounded-2xl p-4"
+                style={{
+                  background: "rgba(168,85,247,0.08)",
+                  border: "1px solid rgba(168,85,247,0.2)",
+                }}
+              >
+                <div className="flex justify-between text-white/60 text-sm mb-1.5">
+                  <span>Format</span>
+                  <span className="text-white font-semibold">MP4 (H.264)</span>
+                </div>
+                <div className="flex justify-between text-white/60 text-sm mb-1.5">
+                  <span>Resolution</span>
+                  <span className="text-white font-semibold">
+                    {currentRatioInfo.resolution}
+                  </span>
+                </div>
+                <div className="flex justify-between text-white/60 text-sm mb-1.5">
+                  <span>Duration</span>
+                  <span className="text-white font-semibold">
+                    {currentRatioInfo.duration}
+                  </span>
+                </div>
+                {currentRatioInfo.storyInfo && (
+                  <div className="flex justify-between text-white/60 text-sm">
+                    <span>Stories</span>
+                    <span className="text-pink-300 font-semibold">
+                      {currentRatioInfo.storyInfo}
+                    </span>
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>
