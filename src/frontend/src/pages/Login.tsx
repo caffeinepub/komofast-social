@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AnimatePresence, motion } from "motion/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useApp } from "../context/AppContext";
 
@@ -12,6 +12,75 @@ type PageMode = "login" | "register";
 type LoginStep = "phone" | "otp";
 type RegisterStep = "form" | "verify";
 type ContactType = "mobile" | "email";
+
+function CountryBadge() {
+  const [info, setInfo] = useState<{
+    flag: string;
+    country: string;
+    method: string;
+  } | null>(null);
+
+  useEffect(() => {
+    // Browser language quick check
+    const lang = navigator.language || "";
+    const code = lang.split("-")[1]?.toUpperCase();
+    const LANG_MAP: Record<string, { country: string; flag: string }> = {
+      IN: { country: "India", flag: "\u{1f1ee}\u{1f1f3}" },
+      US: { country: "United States", flag: "\u{1f1fa}\u{1f1f8}" },
+      GB: { country: "United Kingdom", flag: "\u{1f1ec}\u{1f1e7}" },
+      AE: { country: "UAE", flag: "\u{1f1e6}\u{1f1ea}" },
+      CA: { country: "Canada", flag: "\u{1f1e8}\u{1f1e6}" },
+      AU: { country: "Australia", flag: "\u{1f1e6}\u{1f1fa}" },
+    };
+    if (code && LANG_MAP[code]) {
+      setInfo({ ...LANG_MAP[code], method: "Browser" });
+    }
+
+    // IP detection
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 4000);
+    fetch("https://ipapi.co/json/", { signal: controller.signal })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.country_name) {
+          const cc = (d.country_code ?? "").toUpperCase();
+          const flagChars =
+            cc.length === 2
+              ? String.fromCodePoint(
+                  ...[...cc].map((c) => 0x1f1e0 + c.charCodeAt(0) - 65),
+                )
+              : "\u{1f30d}";
+          setInfo({ country: d.country_name, flag: flagChars, method: "IP" });
+        }
+      })
+      .catch(() => {})
+      .finally(() => clearTimeout(t));
+
+    return () => {
+      controller.abort();
+      clearTimeout(t);
+    };
+  }, []);
+
+  if (!info) return null;
+
+  return (
+    <p
+      className="mt-3 text-center text-[11px]"
+      style={{ color: "rgba(255,255,255,0.35)" }}
+    >
+      <span
+        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full"
+        style={{
+          background: "rgba(255,255,255,0.06)",
+          border: "1px solid rgba(255,255,255,0.1)",
+        }}
+      >
+        {info.flag} {info.country} &bull; Detected via {info.method}
+      </span>
+    </p>
+  );
+}
 
 export default function Login() {
   const { login, navigate } = useApp();
@@ -711,6 +780,9 @@ export default function Login() {
           </AnimatePresence>
         )}
       </AnimatePresence>
+
+      {/* Country detection badge */}
+      <CountryBadge />
 
       {/* Terms & Privacy links */}
       <p

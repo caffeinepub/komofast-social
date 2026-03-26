@@ -6,6 +6,8 @@ import {
   Coins,
   CreditCard,
   Gift,
+  QrCode,
+  Smartphone,
   Tag,
   TrendingUp,
   Wallet,
@@ -17,6 +19,15 @@ const TRANSACTIONS = [
   {
     id: 1,
     type: "credit",
+    title: "UPI Added",
+    desc: "via PhonePe",
+    amount: 1000,
+    coins: 0,
+    date: "Today, 3:10 PM",
+  },
+  {
+    id: 2,
+    type: "credit",
     title: "Course Sale",
     desc: "Python Programming",
     amount: 699,
@@ -24,7 +35,7 @@ const TRANSACTIONS = [
     date: "Today, 2:30 PM",
   },
   {
-    id: 2,
+    id: 3,
     type: "credit",
     title: "Honor Reward",
     desc: "Silver tier bonus",
@@ -33,7 +44,7 @@ const TRANSACTIONS = [
     date: "Today, 9:00 AM",
   },
   {
-    id: 3,
+    id: 4,
     type: "debit",
     title: "Withdrawal",
     desc: "UPI transfer",
@@ -42,7 +53,7 @@ const TRANSACTIONS = [
     date: "Yesterday",
   },
   {
-    id: 4,
+    id: 5,
     type: "credit",
     title: "Ad Revenue",
     desc: "Content monetization",
@@ -51,7 +62,7 @@ const TRANSACTIONS = [
     date: "Mar 19",
   },
   {
-    id: 5,
+    id: 6,
     type: "credit",
     title: "Referral Bonus",
     desc: "Invited 3 friends",
@@ -60,7 +71,7 @@ const TRANSACTIONS = [
     date: "Mar 18",
   },
   {
-    id: 6,
+    id: 7,
     type: "credit",
     title: "Subscription Share",
     desc: "Academy Pro royalty",
@@ -69,7 +80,7 @@ const TRANSACTIONS = [
     date: "Mar 17",
   },
   {
-    id: 7,
+    id: 8,
     type: "debit",
     title: "Withdrawal",
     desc: "Bank transfer",
@@ -78,6 +89,17 @@ const TRANSACTIONS = [
     date: "Mar 15",
   },
 ];
+
+const UPI_APPS = [
+  { name: "PhonePe", color: "#5F259F", icon: "📱" },
+  { name: "Google Pay", color: "#1A73E8", icon: "🔵" },
+  { name: "Paytm", color: "#00B9F1", icon: "💙" },
+  { name: "BHIM", color: "#FF6B00", icon: "🟠" },
+  { name: "Amazon Pay", color: "#FF9900", icon: "🟡" },
+  { name: "Other UPI", color: "#6B7280", icon: "💳" },
+];
+
+const PRESET_AMOUNTS = [100, 250, 500, 1000, 2000, 5000];
 
 type PromoResult =
   | {
@@ -128,6 +150,15 @@ function applyPromoCode(code: string): PromoResult {
 export default function WalletPage() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showPromoModal, setShowPromoModal] = useState(false);
+  const [showAddMoneyModal, setShowAddMoneyModal] = useState(false);
+  const [addMoneyStep, setAddMoneyStep] = useState<
+    "amount" | "upi" | "success"
+  >("amount");
+  const [addMoneyAmount, setAddMoneyAmount] = useState("");
+  const [selectedUpiApp, setSelectedUpiApp] = useState("");
+  const [upiIdInput, setUpiIdInput] = useState("");
+  const [showQr, setShowQr] = useState(false);
+
   const [withdrawMethod, setWithdrawMethod] = useState<"upi" | "bank">("upi");
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [upiId, setUpiId] = useState("");
@@ -176,6 +207,33 @@ export default function WalletPage() {
     setPromoApplied(false);
   };
 
+  const handleAddMoneyProceed = () => {
+    if (!addMoneyAmount || Number(addMoneyAmount) < 10) return;
+    setAddMoneyStep("upi");
+  };
+
+  const handleUpiPay = () => {
+    setAddMoneyStep("success");
+    setTimeout(() => {
+      setBalance((prev) => prev + Number(addMoneyAmount));
+      setShowAddMoneyModal(false);
+      setAddMoneyStep("amount");
+      setAddMoneyAmount("");
+      setSelectedUpiApp("");
+      setUpiIdInput("");
+      setShowQr(false);
+    }, 2200);
+  };
+
+  const closeAddMoney = () => {
+    setShowAddMoneyModal(false);
+    setAddMoneyStep("amount");
+    setAddMoneyAmount("");
+    setSelectedUpiApp("");
+    setUpiIdInput("");
+    setShowQr(false);
+  };
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-4">
       {/* Balance Cards */}
@@ -214,7 +272,6 @@ export default function WalletPage() {
       <div className="grid grid-cols-3 gap-3 mb-5">
         <button
           type="button"
-          data-ocid="wallet.withdraw_button"
           onClick={() => setShowWithdrawModal(true)}
           className="bg-white/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-white/10 hover:bg-white/10 transition-all"
         >
@@ -225,17 +282,16 @@ export default function WalletPage() {
         </button>
         <button
           type="button"
-          data-ocid="wallet.secondary_button"
-          className="bg-white/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-white/10"
+          onClick={() => setShowAddMoneyModal(true)}
+          className="bg-white/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-white/10 hover:bg-white/10 transition-all"
         >
           <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-            <ArrowUpRight size={18} className="text-blue-400" />
+            <Smartphone size={18} className="text-blue-400" />
           </div>
-          <span className="text-gray-300 text-xs font-medium">Add Money</span>
+          <span className="text-gray-300 text-xs font-medium">Add via UPI</span>
         </button>
         <button
           type="button"
-          data-ocid="wallet.promo_button"
           onClick={() => setShowPromoModal(true)}
           className="bg-white/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-white/10 hover:bg-white/10 transition-all"
         >
@@ -245,6 +301,25 @@ export default function WalletPage() {
           <span className="text-gray-300 text-xs font-medium">Redeem</span>
         </button>
       </div>
+
+      {/* UPI Banner */}
+      <button
+        type="button"
+        onClick={() => setShowAddMoneyModal(true)}
+        className="w-full mb-5 rounded-2xl p-4 flex items-center gap-4 border border-blue-500/30 hover:border-blue-400/50 transition-all"
+        style={{ background: "linear-gradient(135deg, #1E3A8A22, #7C3AED22)" }}
+      >
+        <div className="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+          <QrCode size={24} className="text-blue-400" />
+        </div>
+        <div className="text-left flex-1">
+          <div className="text-white font-bold text-sm">Add Money via UPI</div>
+          <div className="text-gray-400 text-xs">
+            PhonePe · Google Pay · Paytm · BHIM · Amazon Pay
+          </div>
+        </div>
+        <div className="text-blue-400 text-xs font-semibold">ADD →</div>
+      </button>
 
       {/* Earning Breakdown */}
       <div className="bg-white/5 rounded-2xl p-4 mb-5 border border-white/10">
@@ -290,7 +365,6 @@ export default function WalletPage() {
               <button
                 type="button"
                 key={tab}
-                data-ocid={`wallet.${tab}.tab`}
                 onClick={() => setActiveTab(tab)}
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                   activeTab === tab
@@ -304,10 +378,9 @@ export default function WalletPage() {
           </div>
         </div>
         <div className="space-y-2">
-          {filteredTxns.map((txn, idx) => (
+          {filteredTxns.map((txn) => (
             <div
               key={txn.id}
-              data-ocid={`wallet.transaction.item.${idx + 1}`}
               className="bg-white/5 rounded-xl p-3 border border-white/10 flex items-center gap-3"
             >
               <div
@@ -348,13 +421,241 @@ export default function WalletPage() {
         </div>
       </div>
 
+      {/* ===== ADD MONEY VIA UPI MODAL ===== */}
+      {showAddMoneyModal && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-end justify-center p-4">
+          <div className="bg-[#1A1F2B] rounded-3xl w-full max-w-md p-6">
+            {addMoneyStep === "success" ? (
+              <div className="text-center py-8">
+                <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
+                  <Check size={40} className="text-green-400" />
+                </div>
+                <div className="text-green-400 font-bold text-xl mb-1">
+                  Payment Successful!
+                </div>
+                <div className="text-white font-bold text-2xl mb-1">
+                  ₹{Number(addMoneyAmount).toLocaleString()}
+                </div>
+                <div className="text-gray-400 text-sm">
+                  Added to your KomoFast wallet
+                </div>
+              </div>
+            ) : addMoneyStep === "upi" ? (
+              <>
+                <div className="flex items-center justify-between mb-5">
+                  <button
+                    type="button"
+                    onClick={() => setAddMoneyStep("amount")}
+                    className="text-gray-400 text-sm"
+                  >
+                    ← Back
+                  </button>
+                  <span className="text-white font-bold">
+                    Pay ₹{Number(addMoneyAmount).toLocaleString()}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={closeAddMoney}
+                    className="text-gray-400"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                {/* UPI App Selector */}
+                <div className="mb-4">
+                  <div className="text-gray-400 text-xs mb-3 font-semibold uppercase tracking-wider">
+                    Choose UPI App
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {UPI_APPS.map((app) => (
+                      <button
+                        type="button"
+                        key={app.name}
+                        onClick={() => setSelectedUpiApp(app.name)}
+                        className={`rounded-xl p-3 flex flex-col items-center gap-1 border transition-all ${
+                          selectedUpiApp === app.name
+                            ? "border-purple-500 bg-purple-500/20"
+                            : "border-white/10 bg-white/5"
+                        }`}
+                      >
+                        <span className="text-2xl">{app.icon}</span>
+                        <span className="text-gray-300 text-[10px] font-medium text-center">
+                          {app.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* UPI ID Input */}
+                <div className="mb-4">
+                  <div className="text-gray-400 text-xs mb-2 font-semibold uppercase tracking-wider">
+                    Or Enter UPI ID
+                  </div>
+                  <input
+                    type="text"
+                    value={upiIdInput}
+                    onChange={(e) => setUpiIdInput(e.target.value)}
+                    placeholder="yourname@upi"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+
+                {/* QR Code Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setShowQr(!showQr)}
+                  className="w-full mb-4 py-2 rounded-xl border border-white/10 bg-white/5 text-gray-300 text-sm flex items-center justify-center gap-2 hover:bg-white/10 transition-all"
+                >
+                  <QrCode size={16} />
+                  {showQr ? "Hide QR Code" : "Show QR Code"}
+                </button>
+
+                {showQr && (
+                  <div className="mb-4 flex flex-col items-center">
+                    <div className="w-36 h-36 bg-white rounded-2xl flex items-center justify-center mb-2">
+                      {/* Simulated QR pattern */}
+                      <div className="grid grid-cols-7 gap-0.5 p-2">
+                        {Array.from({ length: 49 }, (_, i) => i).map((i) => (
+                          <div
+                            key={i}
+                            className={`w-3.5 h-3.5 rounded-sm ${
+                              [
+                                0, 1, 2, 3, 4, 5, 6, 7, 13, 14, 20, 21, 27, 28,
+                                34, 35, 41, 42, 43, 44, 45, 46, 48, 10, 23, 36,
+                                15, 8, 29,
+                              ].includes(i)
+                                ? "bg-gray-900"
+                                : "bg-white"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="text-gray-400 text-xs">
+                      Scan with any UPI app
+                    </div>
+                    <div className="text-gray-500 text-[10px] mt-1">
+                      komofast@upi
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleUpiPay}
+                  disabled={!selectedUpiApp && !upiIdInput.trim()}
+                  className="w-full py-3 rounded-2xl font-bold text-white disabled:opacity-40 transition-all"
+                  style={{
+                    background: "linear-gradient(135deg, #7C3AED, #2563EB)",
+                  }}
+                >
+                  Pay ₹{Number(addMoneyAmount).toLocaleString()} via UPI
+                </button>
+              </>
+            ) : (
+              /* STEP 1: Amount */
+              <>
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                      <Smartphone size={16} className="text-blue-400" />
+                    </div>
+                    <span className="text-white font-bold text-lg">
+                      Add Money via UPI
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeAddMoney}
+                    className="text-gray-400"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                {/* Preset Amounts */}
+                <div className="mb-4">
+                  <div className="text-gray-400 text-xs mb-3 font-semibold uppercase tracking-wider">
+                    Quick Add
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {PRESET_AMOUNTS.map((amt) => (
+                      <button
+                        type="button"
+                        key={amt}
+                        onClick={() => setAddMoneyAmount(String(amt))}
+                        className={`py-2.5 rounded-xl text-sm font-semibold border transition-all ${
+                          addMoneyAmount === String(amt)
+                            ? "border-purple-500 bg-purple-500/20 text-white"
+                            : "border-white/10 bg-white/5 text-gray-300 hover:bg-white/10"
+                        }`}
+                      >
+                        ₹{amt.toLocaleString()}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Custom Amount */}
+                <div className="mb-5">
+                  <label
+                    htmlFor="add-amount"
+                    className="text-gray-400 text-xs mb-2 block font-semibold uppercase tracking-wider"
+                  >
+                    Custom Amount
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">
+                      ₹
+                    </span>
+                    <input
+                      id="add-amount"
+                      type="number"
+                      value={addMoneyAmount}
+                      onChange={(e) => setAddMoneyAmount(e.target.value)}
+                      placeholder="Enter amount"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl pl-8 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  <div className="text-gray-600 text-xs mt-1">Minimum ₹10</div>
+                </div>
+
+                {/* Supported UPI Apps strip */}
+                <div className="mb-5 flex items-center gap-3 bg-white/5 rounded-xl p-3 border border-white/10">
+                  <div className="text-gray-500 text-xs">Supported:</div>
+                  <div className="flex gap-2">
+                    {["📱", "🔵", "💙", "🟠", "🟡"].map((icon) => (
+                      <span key={icon} className="text-lg">
+                        {icon}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="text-gray-500 text-xs ml-auto">All UPI</div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleAddMoneyProceed}
+                  disabled={!addMoneyAmount || Number(addMoneyAmount) < 10}
+                  className="w-full py-3 rounded-2xl font-bold text-white disabled:opacity-40 transition-all"
+                  style={{
+                    background: "linear-gradient(135deg, #7C3AED, #2563EB)",
+                  }}
+                >
+                  Proceed to Pay
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Promo Code Modal */}
       {showPromoModal && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-end justify-center p-4">
-          <div
-            data-ocid="wallet.promo.modal"
-            className="bg-[#1A1F2B] rounded-3xl w-full max-w-md p-6"
-          >
+          <div className="bg-[#1A1F2B] rounded-3xl w-full max-w-md p-6">
             {promoApplied && promoResult?.status === "success" ? (
               <div className="text-center py-6">
                 <div
@@ -371,11 +672,7 @@ export default function WalletPage() {
                   )}
                 </div>
                 <div
-                  className={`font-bold text-lg mb-2 ${
-                    promoResult.type === "info"
-                      ? "text-blue-400"
-                      : "text-green-400"
-                  }`}
+                  className={`font-bold text-lg mb-2 ${promoResult.type === "info" ? "text-blue-400" : "text-green-400"}`}
                 >
                   {promoResult.type === "info"
                     ? "Promo Saved!"
@@ -386,7 +683,6 @@ export default function WalletPage() {
                 </div>
                 <button
                   type="button"
-                  data-ocid="wallet.promo.close_button"
                   onClick={handleClosePromo}
                   className="w-full py-3 rounded-2xl font-bold text-white"
                   style={{
@@ -409,18 +705,15 @@ export default function WalletPage() {
                   </div>
                   <button
                     type="button"
-                    data-ocid="wallet.promo.close_button"
                     onClick={handleClosePromo}
                     className="text-gray-400 hover:text-white transition-colors"
                   >
                     <X size={20} />
                   </button>
                 </div>
-
                 <p className="text-gray-400 text-sm mb-5">
                   Enter a promo code to get cashback, coins, or discounts.
                 </p>
-
                 <div className="mb-3">
                   <label
                     htmlFor="promo-input"
@@ -430,7 +723,6 @@ export default function WalletPage() {
                   </label>
                   <input
                     id="promo-input"
-                    data-ocid="wallet.promo.input"
                     type="text"
                     value={promoCode}
                     onChange={(e) => {
@@ -442,20 +734,14 @@ export default function WalletPage() {
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 uppercase tracking-widest font-mono"
                   />
                 </div>
-
                 {promoResult?.status === "error" && (
-                  <div
-                    data-ocid="wallet.promo.error_state"
-                    className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2 mb-3"
-                  >
+                  <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2 mb-3">
                     <X size={14} />
                     {promoResult.message}
                   </div>
                 )}
-
                 <button
                   type="button"
-                  data-ocid="wallet.promo.submit_button"
                   onClick={handleApplyPromo}
                   disabled={!promoCode.trim()}
                   className="w-full py-3 rounded-2xl font-bold text-white disabled:opacity-40 transition-all"
@@ -465,7 +751,6 @@ export default function WalletPage() {
                 >
                   Apply Code
                 </button>
-
                 <div className="mt-4 p-3 bg-white/5 rounded-xl border border-white/10">
                   <div className="text-gray-500 text-xs font-semibold mb-2 uppercase tracking-wider">
                     Try these codes
@@ -518,14 +803,12 @@ export default function WalletPage() {
                   </span>
                   <button
                     type="button"
-                    data-ocid="wallet.withdraw.close_button"
                     onClick={() => setShowWithdrawModal(false)}
                     className="text-gray-400"
                   >
                     <X size={20} />
                   </button>
                 </div>
-                {/* Method Toggle */}
                 <div className="flex gap-2 mb-4">
                   <button
                     type="button"
@@ -550,7 +833,6 @@ export default function WalletPage() {
                     <Building2 size={16} /> Bank
                   </button>
                 </div>
-
                 <div className="space-y-3 mb-4">
                   <div>
                     <label
@@ -561,7 +843,6 @@ export default function WalletPage() {
                     </label>
                     <input
                       id="withdraw-amount"
-                      data-ocid="wallet.withdraw.input"
                       type="number"
                       value={withdrawAmount}
                       onChange={(e) => setWithdrawAmount(e.target.value)}
@@ -601,15 +882,12 @@ export default function WalletPage() {
                     </>
                   )}
                 </div>
-
                 <div className="text-gray-500 text-xs mb-4">
                   Available: ₹{balance.toLocaleString()} · Processing: 1-3
                   business days
                 </div>
-
                 <button
                   type="button"
-                  data-ocid="wallet.withdraw.submit_button"
                   onClick={handleWithdraw}
                   disabled={!withdrawAmount || Number(withdrawAmount) < 500}
                   className="w-full py-3 rounded-2xl font-bold text-white disabled:opacity-40 transition-all"

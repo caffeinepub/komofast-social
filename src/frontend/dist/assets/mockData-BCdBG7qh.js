@@ -1,4 +1,4 @@
-export const AVATAR_GRADIENTS = [
+const AVATAR_GRADIENTS = [
   "linear-gradient(135deg, #2FA8FF, #A855F7)",
   "linear-gradient(135deg, #FF4D5E, #FF8C42)",
   "linear-gradient(135deg, #00C9A7, #2FA8FF)",
@@ -6,62 +6,60 @@ export const AVATAR_GRADIENTS = [
   "linear-gradient(135deg, #5B6CFF, #A855F7)",
   "linear-gradient(135deg, #00E676, #2FA8FF)",
   "linear-gradient(135deg, #FF6B9D, #A855F7)",
-  "linear-gradient(135deg, #FFD740, #FF4D5E)",
+  "linear-gradient(135deg, #FFD740, #FF4D5E)"
 ];
-
-export const MOCK_STORIES = [
+const MOCK_STORIES = [
   {
     id: "s1",
     username: "alex_creates",
     initials: "AC",
     gradient: AVATAR_GRADIENTS[0],
-    viewed: false,
+    viewed: false
   },
   {
     id: "s2",
     username: "sophia_k",
     initials: "SK",
     gradient: AVATAR_GRADIENTS[1],
-    viewed: false,
+    viewed: false
   },
   {
     id: "s3",
     username: "travel_riya",
     initials: "TR",
     gradient: AVATAR_GRADIENTS[2],
-    viewed: false,
+    viewed: false
   },
   {
     id: "s4",
     username: "devmaster",
     initials: "DM",
     gradient: AVATAR_GRADIENTS[3],
-    viewed: true,
+    viewed: true
   },
   {
     id: "s5",
     username: "nova_beats",
     initials: "NB",
     gradient: AVATAR_GRADIENTS[4],
-    viewed: false,
+    viewed: false
   },
   {
     id: "s6",
     username: "lens_craft",
     initials: "LC",
     gradient: AVATAR_GRADIENTS[5],
-    viewed: true,
+    viewed: true
   },
   {
     id: "s7",
     username: "emi_yoga",
     initials: "EY",
     gradient: AVATAR_GRADIENTS[6],
-    viewed: false,
-  },
+    viewed: false
+  }
 ];
-
-export const MOCK_POSTS = [
+const MOCK_POSTS = [
   {
     id: "p1",
     authorId: "user1",
@@ -72,14 +70,13 @@ export const MOCK_POSTS = [
     isCreator: true,
     timestamp: "2h ago",
     image: "/assets/generated/post-city-night.dim_600x400.jpg",
-    caption:
-      "The city never sleeps — and neither does my creativity. Late night shoot downtown yielded some magic ✨🌃",
+    caption: "The city never sleeps — and neither does my creativity. Late night shoot downtown yielded some magic ✨🌃",
     likes: 2847,
     comments: 184,
     shares: 62,
     liked: false,
     bookmarked: false,
-    postType: "post",
+    postType: "post"
   },
   {
     id: "p2",
@@ -91,14 +88,13 @@ export const MOCK_POSTS = [
     isCreator: false,
     timestamp: "4h ago",
     image: "/assets/generated/post-sunset-beach.dim_600x400.jpg",
-    caption:
-      "Every sunset is a promise of a new dawn 🌅 Bali has stolen my heart completely. Tag someone you'd bring here!",
+    caption: "Every sunset is a promise of a new dawn 🌅 Bali has stolen my heart completely. Tag someone you'd bring here!",
     likes: 5421,
     comments: 347,
     shares: 198,
     liked: true,
     bookmarked: false,
-    postType: "post",
+    postType: "post"
   },
   {
     id: "p3",
@@ -110,14 +106,13 @@ export const MOCK_POSTS = [
     isCreator: true,
     timestamp: "6h ago",
     image: null,
-    caption:
-      "Just shipped a feature that took 3 weeks of debugging. The code is now 40% faster and uses 60% less memory. Sometimes the best code is the code you delete 🚀 #dev #coding #tech",
+    caption: "Just shipped a feature that took 3 weeks of debugging. The code is now 40% faster and uses 60% less memory. Sometimes the best code is the code you delete 🚀 #dev #coding #tech",
     likes: 1293,
     comments: 98,
     shares: 44,
     liked: false,
     bookmarked: true,
-    postType: "post",
+    postType: "post"
   },
   {
     id: "p4",
@@ -129,14 +124,13 @@ export const MOCK_POSTS = [
     isCreator: true,
     timestamp: "8h ago",
     image: "/assets/generated/post-forest-aerial.dim_600x400.jpg",
-    caption:
-      "Drone footage from 400 meters above the Amazon. This perspective changes everything about how you see the world 🌿🌎 #nature #drone #photography",
+    caption: "Drone footage from 400 meters above the Amazon. This perspective changes everything about how you see the world 🌿🌎 #nature #drone #photography",
     likes: 8732,
     comments: 521,
     shares: 412,
     liked: false,
     bookmarked: false,
-    postType: "post",
+    postType: "post"
   },
   {
     id: "p5",
@@ -148,14 +142,13 @@ export const MOCK_POSTS = [
     isCreator: false,
     timestamp: "12h ago",
     image: null,
-    caption:
-      "Morning routine update: 20 min meditation + 45 min yoga = completely changed life. Been doing this for 90 days straight. Ask me anything about starting your own practice 🧘‍♀️✨",
+    caption: "Morning routine update: 20 min meditation + 45 min yoga = completely changed life. Been doing this for 90 days straight. Ask me anything about starting your own practice 🧘‍♀️✨",
     likes: 3156,
     comments: 267,
     shares: 89,
     liked: false,
     bookmarked: false,
-    postType: "post",
+    postType: "post"
   },
   {
     id: "p6",
@@ -167,18 +160,16 @@ export const MOCK_POSTS = [
     isCreator: true,
     timestamp: "1d ago",
     image: null,
-    caption:
-      "New track dropping Friday 🎵 Blending lo-fi with future bass in ways nobody has tried before. Pre-save link in bio. #music #producer #newmusic",
+    caption: "New track dropping Friday 🎵 Blending lo-fi with future bass in ways nobody has tried before. Pre-save link in bio. #music #producer #newmusic",
     likes: 4521,
     comments: 389,
     shares: 203,
     liked: true,
     bookmarked: true,
-    postType: "post",
-  },
+    postType: "post"
+  }
 ];
-
-export const MOCK_REELS = [
+const MOCK_REELS = [
   {
     id: "r1",
     username: "sophia_k",
@@ -188,7 +179,7 @@ export const MOCK_REELS = [
     likes: 12400,
     views: "84K",
     initials: "SK",
-    gradient: AVATAR_GRADIENTS[1],
+    gradient: AVATAR_GRADIENTS[1]
   },
   {
     id: "r2",
@@ -199,7 +190,7 @@ export const MOCK_REELS = [
     likes: 28900,
     views: "210K",
     initials: "XJ",
-    gradient: AVATAR_GRADIENTS[3],
+    gradient: AVATAR_GRADIENTS[3]
   },
   {
     id: "r3",
@@ -210,11 +201,10 @@ export const MOCK_REELS = [
     likes: 19200,
     views: "156K",
     initials: "CM",
-    gradient: AVATAR_GRADIENTS[7],
-  },
+    gradient: AVATAR_GRADIENTS[7]
+  }
 ];
-
-export const MOCK_SUGGESTIONS = [
+const MOCK_SUGGESTIONS = [
   {
     id: "su1",
     username: "kai_photos",
@@ -223,7 +213,7 @@ export const MOCK_SUGGESTIONS = [
     gradient: AVATAR_GRADIENTS[0],
     isCreator: true,
     mutuals: 12,
-    following: false,
+    following: false
   },
   {
     id: "su2",
@@ -233,7 +223,7 @@ export const MOCK_SUGGESTIONS = [
     gradient: AVATAR_GRADIENTS[1],
     isCreator: false,
     mutuals: 8,
-    following: false,
+    following: false
   },
   {
     id: "su3",
@@ -243,7 +233,7 @@ export const MOCK_SUGGESTIONS = [
     gradient: AVATAR_GRADIENTS[5],
     isCreator: true,
     mutuals: 23,
-    following: false,
+    following: false
   },
   {
     id: "su4",
@@ -253,7 +243,7 @@ export const MOCK_SUGGESTIONS = [
     gradient: AVATAR_GRADIENTS[6],
     isCreator: false,
     mutuals: 5,
-    following: false,
+    following: false
   },
   {
     id: "su5",
@@ -263,11 +253,10 @@ export const MOCK_SUGGESTIONS = [
     gradient: AVATAR_GRADIENTS[7],
     isCreator: true,
     mutuals: 17,
-    following: false,
-  },
+    following: false
+  }
 ];
-
-export const TRENDING_HASHTAGS = [
+const TRENDING_HASHTAGS = [
   "#KomoFast",
   "#TechTrends",
   "#NatureLove",
@@ -279,15 +268,13 @@ export const TRENDING_HASHTAGS = [
   "#SunsetChaser",
   "#CodingLife",
   "#ArtInspired",
-  "#FoodPhotography",
+  "#FoodPhotography"
 ];
-
-export const MOCK_PRODUCTS = [
+const MOCK_PRODUCTS = [
   {
     id: "pr1",
     title: "ProSound Elite Headphones",
-    description:
-      "Premium wireless headphones with 40hr battery, ANC, and studio-quality sound. Perfect for creators.",
+    description: "Premium wireless headphones with 40hr battery, ANC, and studio-quality sound. Perfect for creators.",
     price: 7499,
     category: "Electronics",
     stock: 15,
@@ -296,13 +283,12 @@ export const MOCK_PRODUCTS = [
     rating: 4.8,
     reviews: 312,
     soldCount: 1240,
-    discount: 20,
+    discount: 20
   },
   {
     id: "pr2",
     title: "NovaPulse Smart Watch Pro",
-    description:
-      "Advanced fitness tracking, heart rate monitoring, sleep analysis, and 7-day battery life.",
+    description: "Advanced fitness tracking, heart rate monitoring, sleep analysis, and 7-day battery life.",
     price: 10999,
     category: "Electronics",
     stock: 8,
@@ -311,13 +297,12 @@ export const MOCK_PRODUCTS = [
     rating: 4.7,
     reviews: 189,
     soldCount: 876,
-    discount: 15,
+    discount: 15
   },
   {
     id: "pr3",
     title: "Lumos Arc Desk Lamp",
-    description:
-      "Minimalist LED desk lamp with 5 brightness levels, USB-C charging port, and adjustable arm.",
+    description: "Minimalist LED desk lamp with 5 brightness levels, USB-C charging port, and adjustable arm.",
     price: 3799,
     category: "Home & Living",
     stock: 32,
@@ -326,13 +311,12 @@ export const MOCK_PRODUCTS = [
     rating: 4.5,
     reviews: 97,
     soldCount: 430,
-    discount: 10,
+    discount: 10
   },
   {
     id: "pr4",
     title: "Creator Bundle Pack",
-    description:
-      "Essential toolkit for content creators: ring light, mic stand adapter, cable management kit.",
+    description: "Essential toolkit for content creators: ring light, mic stand adapter, cable management kit.",
     price: 2999,
     category: "Creator Tools",
     stock: 20,
@@ -341,13 +325,12 @@ export const MOCK_PRODUCTS = [
     rating: 4.6,
     reviews: 54,
     soldCount: 215,
-    discount: 25,
+    discount: 25
   },
   {
     id: "pr5",
     title: "Zenflow Yoga Mat Premium",
-    description:
-      "6mm thick non-slip eco-friendly yoga mat with alignment guides, carry strap included.",
+    description: "6mm thick non-slip eco-friendly yoga mat with alignment guides, carry strap included.",
     price: 2499,
     category: "Sports & Fitness",
     stock: 45,
@@ -356,13 +339,12 @@ export const MOCK_PRODUCTS = [
     rating: 4.9,
     reviews: 428,
     soldCount: 1895,
-    discount: 30,
+    discount: 30
   },
   {
     id: "pr6",
     title: "Handloom Kurta Set",
-    description:
-      "Traditional Indian handloom kurta set with rich fabric, ethnic prints, and comfortable fit.",
+    description: "Traditional Indian handloom kurta set with rich fabric, ethnic prints, and comfortable fit.",
     price: 1299,
     category: "Fashion",
     stock: 60,
@@ -371,13 +353,12 @@ export const MOCK_PRODUCTS = [
     rating: 4.7,
     reviews: 233,
     soldCount: 982,
-    discount: 18,
+    discount: 18
   },
   {
     id: "pr7",
     title: "Phone Stand Ring Light",
-    description:
-      "Adjustable ring light with phone stand for reels, vlogs, and video calls. USB powered.",
+    description: "Adjustable ring light with phone stand for reels, vlogs, and video calls. USB powered.",
     price: 899,
     category: "Creator Tools",
     stock: 75,
@@ -386,13 +367,12 @@ export const MOCK_PRODUCTS = [
     rating: 4.8,
     reviews: 156,
     soldCount: 3210,
-    discount: 35,
+    discount: 35
   },
   {
     id: "pr8",
     title: "Whey Protein Powder 1kg",
-    description:
-      "High-quality whey protein isolate, 25g protein per serving, chocolate & vanilla flavors.",
+    description: "High-quality whey protein isolate, 25g protein per serving, chocolate & vanilla flavors.",
     price: 2199,
     category: "Sports & Fitness",
     stock: 30,
@@ -401,13 +381,12 @@ export const MOCK_PRODUCTS = [
     rating: 4.6,
     reviews: 89,
     soldCount: 654,
-    discount: 12,
+    discount: 12
   },
   {
     id: "pr9",
     title: "Luxury Scented Candles Set",
-    description:
-      "Set of 6 hand-poured soy wax candles with lavender, jasmine, and sandalwood fragrances.",
+    description: "Set of 6 hand-poured soy wax candles with lavender, jasmine, and sandalwood fragrances.",
     price: 799,
     category: "Home & Living",
     stock: 50,
@@ -416,11 +395,10 @@ export const MOCK_PRODUCTS = [
     rating: 4.9,
     reviews: 341,
     soldCount: 1567,
-    discount: 22,
-  },
+    discount: 22
+  }
 ];
-
-export const MOCK_NOTIFICATIONS = [
+const MOCK_NOTIFICATIONS = [
   {
     id: "n1",
     type: "like",
@@ -430,7 +408,7 @@ export const MOCK_NOTIFICATIONS = [
     message: "liked your post",
     time: "2m ago",
     read: false,
-    postImage: "/assets/generated/post-city-night.dim_600x400.jpg",
+    postImage: "/assets/generated/post-city-night.dim_600x400.jpg"
   },
   {
     id: "n2",
@@ -441,7 +419,7 @@ export const MOCK_NOTIFICATIONS = [
     message: "started following you",
     time: "15m ago",
     read: false,
-    postImage: null,
+    postImage: null
   },
   {
     id: "n3",
@@ -452,7 +430,7 @@ export const MOCK_NOTIFICATIONS = [
     message: 'commented: "This is absolutely stunning!" on your post',
     time: "1h ago",
     read: false,
-    postImage: "/assets/generated/post-sunset-beach.dim_600x400.jpg",
+    postImage: "/assets/generated/post-sunset-beach.dim_600x400.jpg"
   },
   {
     id: "n4",
@@ -463,7 +441,7 @@ export const MOCK_NOTIFICATIONS = [
     message: "subscribed to your creator channel",
     time: "3h ago",
     read: true,
-    postImage: null,
+    postImage: null
   },
   {
     id: "n5",
@@ -474,7 +452,7 @@ export const MOCK_NOTIFICATIONS = [
     message: "and 47 others liked your reel",
     time: "5h ago",
     read: true,
-    postImage: null,
+    postImage: null
   },
   {
     id: "n6",
@@ -485,11 +463,10 @@ export const MOCK_NOTIFICATIONS = [
     message: "replied to your comment",
     time: "8h ago",
     read: true,
-    postImage: null,
-  },
+    postImage: null
+  }
 ];
-
-export const MOCK_COMMENTS = [
+const MOCK_COMMENTS = [
   {
     id: "c1",
     username: "sophia_k",
@@ -497,7 +474,7 @@ export const MOCK_COMMENTS = [
     gradient: AVATAR_GRADIENTS[1],
     text: "This is absolutely breathtaking! Where was this taken? 😍",
     time: "45m ago",
-    likes: 23,
+    likes: 23
   },
   {
     id: "c2",
@@ -506,7 +483,7 @@ export const MOCK_COMMENTS = [
     gradient: AVATAR_GRADIENTS[3],
     text: "Your photography skills are on a completely different level. Tutorial please! 🙏",
     time: "1h ago",
-    likes: 17,
+    likes: 17
   },
   {
     id: "c3",
@@ -515,7 +492,7 @@ export const MOCK_COMMENTS = [
     gradient: AVATAR_GRADIENTS[6],
     text: "Wow, the colors in this shot are incredible!",
     time: "2h ago",
-    likes: 8,
+    likes: 8
   },
   {
     id: "c4",
@@ -524,6 +501,17 @@ export const MOCK_COMMENTS = [
     gradient: AVATAR_GRADIENTS[4],
     text: "This deserves way more likes! 🔥",
     time: "3h ago",
-    likes: 41,
-  },
+    likes: 41
+  }
 ];
+export {
+  AVATAR_GRADIENTS as A,
+  MOCK_STORIES as M,
+  TRENDING_HASHTAGS as T,
+  MOCK_POSTS as a,
+  MOCK_REELS as b,
+  MOCK_SUGGESTIONS as c,
+  MOCK_NOTIFICATIONS as d,
+  MOCK_COMMENTS as e,
+  MOCK_PRODUCTS as f
+};

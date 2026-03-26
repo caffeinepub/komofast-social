@@ -400,7 +400,7 @@ function ModerationPanel() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         <div className="komo-surface rounded-xl p-3 komo-card-shadow text-center">
           <p className="text-[22px] font-bold text-orange-400">
             {pendingReports.length}
@@ -826,6 +826,8 @@ export default function Admin() {
         seller: "Admin",
         rating: 5.0,
         reviews: 0,
+        soldCount: 0,
+        discount: 0,
       },
     ]);
     setNewProduct({
@@ -867,8 +869,29 @@ export default function Admin() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-4">
-      <div className="flex gap-5">
+    <div className="max-w-6xl mx-auto">
+      {/* Mobile sticky tab bar */}
+      <div className="md:hidden sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-komo-border/60 shadow-sm">
+        <div className="flex gap-1.5 overflow-x-auto pb-2 pt-2 px-3 scrollbar-hide">
+          {SIDEBAR_ITEMS.map((item) => (
+            <button
+              type="button"
+              key={item.id}
+              onClick={() => setActiveSection(item.id)}
+              className={`flex-shrink-0 flex flex-col items-center gap-0.5 px-3 py-1.5 min-h-[52px] min-w-[56px] justify-center rounded-xl text-[10px] font-semibold transition-all ${
+                activeSection === item.id
+                  ? "komo-gradient text-white shadow-md"
+                  : "bg-accent/70 text-komo-text-secondary"
+              }`}
+            >
+              <item.icon size={16} />
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex gap-5 px-3 sm:px-4 py-3 sm:py-4">
         {/* Sidebar */}
         <aside className="w-48 flex-shrink-0 hidden md:block">
           <div className="komo-surface rounded-2xl komo-card-shadow p-3 sticky top-20">
@@ -900,25 +923,6 @@ export default function Admin() {
             </nav>
           </div>
         </aside>
-
-        {/* Mobile tab bar */}
-        <div className="md:hidden flex gap-1 overflow-x-auto pb-1 w-full mb-4 scrollbar-hide">
-          {SIDEBAR_ITEMS.map((item) => (
-            <button
-              type="button"
-              key={item.id}
-              onClick={() => setActiveSection(item.id)}
-              className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-[12px] font-medium transition-all ${
-                activeSection === item.id
-                  ? "komo-gradient text-white"
-                  : "bg-accent text-komo-text-secondary"
-              }`}
-            >
-              <item.icon size={14} />
-              {item.label}
-            </button>
-          ))}
-        </div>
 
         {/* Content */}
         <main className="flex-1 min-w-0">
@@ -1250,7 +1254,70 @@ export default function Admin() {
               <h1 className="text-[20px] font-bold text-foreground">
                 User Management
               </h1>
-              <div className="komo-surface rounded-2xl komo-card-shadow overflow-hidden">
+              {/* Mobile: User Cards */}
+              <div className="sm:hidden komo-surface rounded-2xl komo-card-shadow divide-y divide-komo-border">
+                {users.map((user, i) => (
+                  <div
+                    key={user.id}
+                    data-ocid={`admin.users.row.${i + 1}`}
+                    className="p-4 flex items-center gap-3"
+                  >
+                    <div
+                      className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-[12px] font-bold text-white"
+                      style={{ background: user.gradient }}
+                    >
+                      {user.initials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-semibold text-foreground truncate">
+                        {user.displayName}
+                      </p>
+                      <p className="text-[11px] text-komo-text-muted">
+                        @{user.username}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <RoleBadge role={user.role} />
+                        <span
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${user.isActive ? "bg-green-500/15 text-green-400" : "bg-destructive/15 text-destructive"}`}
+                        >
+                          {user.isActive ? "Active" : "Suspended"}
+                        </span>
+                        <span className="text-[11px] text-komo-text-muted">
+                          {user.followers.toLocaleString()} followers
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      data-ocid={`admin.users.toggle.${i + 1}`}
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 min-w-[80px] text-[11px] flex-shrink-0"
+                      onClick={() => handleToggleUser(user.id)}
+                    >
+                      {user.isActive ? (
+                        <>
+                          <ToggleRight
+                            size={14}
+                            className="text-green-400 mr-1"
+                          />{" "}
+                          Suspend
+                        </>
+                      ) : (
+                        <>
+                          <ToggleLeft
+                            size={14}
+                            className="text-destructive mr-1"
+                          />{" "}
+                          Restore
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop: Table */}
+              <div className="hidden sm:block komo-surface rounded-2xl komo-card-shadow overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow className="border-komo-border hover:bg-transparent">
@@ -1377,7 +1444,67 @@ export default function Admin() {
                 </Button>
               </div>
 
-              <div className="komo-surface rounded-2xl komo-card-shadow overflow-hidden">
+              {/* Mobile: Product Cards */}
+              <div className="sm:hidden komo-surface rounded-2xl komo-card-shadow divide-y divide-komo-border">
+                {products.map((p, i) => (
+                  <div
+                    key={p.id}
+                    data-ocid={`admin.marketplace.row.${i + 1}`}
+                    className="p-4 flex items-center gap-3"
+                  >
+                    {p.image ? (
+                      <img
+                        src={p.image}
+                        alt={p.title}
+                        className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center flex-shrink-0">
+                        <Package size={18} className="text-komo-text-muted" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-semibold text-foreground truncate">
+                        {p.title}
+                      </p>
+                      <p className="text-[11px] text-komo-text-muted">
+                        {p.category}
+                      </p>
+                      <p className="text-[13px] font-bold komo-gradient-text mt-0.5">
+                        ${p.price.toFixed(2)} · Stock: {p.stock}
+                      </p>
+                    </div>
+                    <div className="flex gap-1 flex-shrink-0">
+                      <Button
+                        data-ocid={`admin.marketplace.edit.${i + 1}`}
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 w-9 p-0 hover:bg-komo-blue/10 text-komo-blue"
+                        onClick={() => toast.info("Edit product coming soon!")}
+                      >
+                        <Edit size={14} />
+                      </Button>
+                      <Button
+                        data-ocid={`admin.marketplace.delete.${i + 1}`}
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 w-9 p-0 hover:bg-destructive/10 text-destructive"
+                        onClick={() => {
+                          setProducts((prev) =>
+                            prev.filter((pr) => pr.id !== p.id),
+                          );
+                          toast.success("Product deleted");
+                        }}
+                      >
+                        <Trash2 size={14} />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop: Table */}
+              <div className="hidden sm:block komo-surface rounded-2xl komo-card-shadow overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow className="border-komo-border hover:bg-transparent">
@@ -1503,7 +1630,7 @@ export default function Admin() {
                       }
                       className="bg-accent border-komo-border resize-none"
                     />
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <Input
                         data-ocid="admin.product.price.input"
                         placeholder="Price ($)"
@@ -1573,7 +1700,7 @@ export default function Admin() {
                 Analytics
               </h1>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="komo-surface rounded-2xl komo-card-shadow p-4">
                   <h3 className="text-[13px] font-semibold text-foreground mb-3">
                     Top Creators
@@ -1646,7 +1773,7 @@ export default function Admin() {
                 <h3 className="text-[13px] font-semibold text-foreground mb-3">
                   Commission Tracking
                 </h3>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <div className="p-3 bg-accent rounded-xl">
                     <p className="text-[11px] text-komo-text-muted">
                       This Month
@@ -2061,86 +2188,152 @@ export default function Admin() {
                     Promote users to admin or demote existing admins
                   </p>
                 </div>
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-komo-border hover:bg-transparent">
-                      <TableHead className="text-komo-text-muted">
-                        User
-                      </TableHead>
-                      <TableHead className="text-komo-text-muted">
-                        Current Role
-                      </TableHead>
-                      <TableHead className="text-komo-text-muted">
-                        Action
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {MOCK_USERS_ADMIN.map((user, i) => {
-                      const currentRole = ownerRoles[user.id] ?? user.role;
-                      return (
-                        <TableRow
-                          key={user.id}
-                          data-ocid={`owner.admin_mgmt.row.${i + 1}`}
-                          className="border-komo-border hover:bg-accent/30"
+
+                {/* Mobile: User Role Cards */}
+                <div className="sm:hidden divide-y divide-komo-border">
+                  {MOCK_USERS_ADMIN.map((user, i) => {
+                    const currentRole = ownerRoles[user.id] ?? user.role;
+                    return (
+                      <div
+                        key={user.id}
+                        data-ocid={`owner.admin_mgmt.row.${i + 1}`}
+                        className="p-4 flex items-center gap-3"
+                      >
+                        <div
+                          className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-[12px] font-bold text-white"
+                          style={{ background: user.gradient }}
                         >
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white"
-                                style={{ background: user.gradient }}
-                              >
-                                {user.initials}
-                              </div>
-                              <div>
-                                <p className="text-[13px] font-semibold text-foreground">
-                                  {user.displayName}
-                                </p>
-                                <p className="text-[11px] text-komo-text-muted">
-                                  @{user.username}
-                                </p>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
+                          {user.initials}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-semibold text-foreground truncate">
+                            {user.displayName}
+                          </p>
+                          <p className="text-[11px] text-komo-text-muted">
+                            @{user.username}
+                          </p>
+                          <div className="mt-1">
                             <RoleBadge role={currentRole} />
-                          </TableCell>
-                          <TableCell>
-                            {currentRole === "owner" ? (
-                              <span className="text-[11px] text-komo-text-muted italic">
-                                Platform Owner
-                              </span>
-                            ) : currentRole === "user" ? (
-                              <Button
-                                data-ocid={`owner.promote.button.${i + 1}`}
-                                size="sm"
-                                className="h-7 text-[11px] komo-gradient border-0 text-white"
-                                onClick={() =>
-                                  handlePromoteOrDemote(user.id, currentRole)
-                                }
-                              >
-                                <Shield size={12} className="mr-1" /> Promote to
-                                Admin
-                              </Button>
-                            ) : (
-                              <Button
-                                data-ocid={`owner.demote.button.${i + 1}`}
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 text-[11px] text-destructive hover:bg-destructive/10"
-                                onClick={() =>
-                                  handlePromoteOrDemote(user.id, currentRole)
-                                }
-                              >
-                                <X size={12} className="mr-1" /> Demote
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                          </div>
+                        </div>
+                        <div className="flex-shrink-0">
+                          {currentRole === "owner" ? (
+                            <span className="text-[11px] text-komo-text-muted italic">
+                              Owner
+                            </span>
+                          ) : currentRole === "user" ? (
+                            <Button
+                              data-ocid={`owner.promote.button.${i + 1}`}
+                              size="sm"
+                              className="h-9 text-[11px] komo-gradient border-0 text-white"
+                              onClick={() =>
+                                handlePromoteOrDemote(user.id, currentRole)
+                              }
+                            >
+                              <Shield size={12} className="mr-1" /> Promote
+                            </Button>
+                          ) : (
+                            <Button
+                              data-ocid={`owner.demote.button.${i + 1}`}
+                              size="sm"
+                              variant="ghost"
+                              className="h-9 text-[11px] text-destructive hover:bg-destructive/10"
+                              onClick={() =>
+                                handlePromoteOrDemote(user.id, currentRole)
+                              }
+                            >
+                              <X size={12} className="mr-1" /> Demote
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Desktop: Table */}
+                <div className="hidden sm:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-komo-border hover:bg-transparent">
+                        <TableHead className="text-komo-text-muted">
+                          User
+                        </TableHead>
+                        <TableHead className="text-komo-text-muted">
+                          Current Role
+                        </TableHead>
+                        <TableHead className="text-komo-text-muted">
+                          Action
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {MOCK_USERS_ADMIN.map((user, i) => {
+                        const currentRole = ownerRoles[user.id] ?? user.role;
+                        return (
+                          <TableRow
+                            key={user.id}
+                            data-ocid={`owner.admin_mgmt.row.${i + 1}`}
+                            className="border-komo-border hover:bg-accent/30"
+                          >
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white"
+                                  style={{ background: user.gradient }}
+                                >
+                                  {user.initials}
+                                </div>
+                                <div>
+                                  <p className="text-[13px] font-semibold text-foreground">
+                                    {user.displayName}
+                                  </p>
+                                  <p className="text-[11px] text-komo-text-muted">
+                                    @{user.username}
+                                  </p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <RoleBadge role={currentRole} />
+                            </TableCell>
+                            <TableCell>
+                              {currentRole === "owner" ? (
+                                <span className="text-[11px] text-komo-text-muted italic">
+                                  Platform Owner
+                                </span>
+                              ) : currentRole === "user" ? (
+                                <Button
+                                  data-ocid={`owner.promote.button.${i + 1}`}
+                                  size="sm"
+                                  className="h-7 text-[11px] komo-gradient border-0 text-white"
+                                  onClick={() =>
+                                    handlePromoteOrDemote(user.id, currentRole)
+                                  }
+                                >
+                                  <Shield size={12} className="mr-1" /> Promote
+                                  to Admin
+                                </Button>
+                              ) : (
+                                <Button
+                                  data-ocid={`owner.demote.button.${i + 1}`}
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-[11px] text-destructive hover:bg-destructive/10"
+                                  onClick={() =>
+                                    handlePromoteOrDemote(user.id, currentRole)
+                                  }
+                                >
+                                  <X size={12} className="mr-1" /> Demote
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
 
               {/* Platform Settings Card */}

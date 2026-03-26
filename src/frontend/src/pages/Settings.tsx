@@ -760,6 +760,16 @@ export default function Settings() {
         />
         <Divider />
 
+        {/* Country Detection */}
+        <SettingRow
+          ocid="settings.country.link"
+          icon={<span className="text-[14px]">📍</span>}
+          label="Country / देश"
+          sublabel="Detect your country automatically"
+          onClick={() => navigate("/country-detect")}
+        />
+        <Divider />
+
         <SettingRow
           ocid="settings.data_saver.switch"
           icon={<Volume2 size={15} className="text-komo-purple" />}

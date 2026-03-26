@@ -45,6 +45,7 @@ const Events = lazy(() => import("./pages/Events"));
 const VideoEditor = lazy(() => import("./pages/VideoEditor"));
 const DonatePage = lazy(() => import("./pages/DonatePage"));
 const CreatorPrivacy = lazy(() => import("./pages/CreatorPrivacy"));
+const CountryDetect = lazy(() => import("./pages/CountryDetect"));
 
 function PageLoader() {
   return (
@@ -145,6 +146,7 @@ function Router() {
     if (currentPath === "/events") return <Events />;
     if (currentPath === "/donate") return <DonatePage />;
     if (currentPath === "/creator-privacy") return <CreatorPrivacy />;
+    if (currentPath === "/country-detect") return <CountryDetect />;
     return <Home />;
   };
 
