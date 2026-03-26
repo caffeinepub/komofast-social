@@ -7,6 +7,7 @@ import {
   FlipHorizontal,
   Heart,
   Layers,
+  MapPin,
   Mic,
   MicOff,
   Music,
@@ -321,6 +322,12 @@ export default function CameraReelModal({ open, onClose }: Props) {
   const [selectedMusic, setSelectedMusic] = useState<Song | null>(null);
   const [isMusicPickerOpen, setIsMusicPickerOpen] = useState(false);
 
+  // Location state
+  const [locationTag, setLocationTag] = useState<string | null>(null);
+  const [locationPermModal, setLocationPermModal] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+
   // Video Quality / Resolution state
   const [qualityPanelOpen, setQualityPanelOpen] = useState(false);
   const [selectedResolution, setSelectedResolution] = useState<"1080p" | "4K">(
@@ -388,6 +395,45 @@ export default function CameraReelModal({ open, onClose }: Props) {
       setIsMusicPickerOpen(false);
     }
   }, [open]);
+
+  const requestLocation = async () => {
+    setLocationLoading(true);
+    setLocationError(null);
+    setLocationPermModal(false);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+          );
+          const data = await res.json();
+          const city =
+            data.address?.city ||
+            data.address?.town ||
+            data.address?.village ||
+            data.address?.county ||
+            "";
+          const country = data.address?.country || "";
+          setLocationTag(city ? `${city}, ${country}` : country || "Unknown");
+        } catch {
+          setLocationTag("Location tagged");
+        }
+        setLocationLoading(false);
+      },
+      (err) => {
+        setLocationLoading(false);
+        if (err.code === err.PERMISSION_DENIED) {
+          setLocationError(
+            "Location access denied. You can enable it in browser settings.",
+          );
+        } else {
+          setLocationError("Unable to get location. Please try again.");
+        }
+      },
+      { timeout: 10000, maximumAge: 60000 },
+    );
+  };
 
   const flipCamera = () => {
     const next = facingMode === "user" ? "environment" : "user";
@@ -651,6 +697,34 @@ export default function CameraReelModal({ open, onClose }: Props) {
                         {selectedResolution}
                       </span>
                     </button>
+                    {/* Location button */}
+                    <button
+                      type="button"
+                      data-ocid="camera_reel.location_button"
+                      onClick={() => {
+                        if (locationTag) {
+                          setLocationTag(null);
+                        } else {
+                          setLocationPermModal(true);
+                        }
+                      }}
+                      disabled={isRecording || locationLoading}
+                      className="w-10 h-10 rounded-full backdrop-blur-sm flex items-center justify-center disabled:opacity-40 transition-all duration-200"
+                      style={{
+                        background: locationTag
+                          ? "linear-gradient(135deg, #22c55e, #16a34a)"
+                          : "rgba(0,0,0,0.5)",
+                        boxShadow: locationTag
+                          ? "0 0 12px rgba(34,197,94,0.7)"
+                          : "none",
+                      }}
+                    >
+                      {locationLoading ? (
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <MapPin size={18} className="text-white" />
+                      )}
+                    </button>
                   </>
                 )}
               </div>
@@ -700,6 +774,46 @@ export default function CameraReelModal({ open, onClose }: Props) {
                     <span className="text-white/60 text-xs">
                       / {formatTime(MAX_SECONDS)}
                     </span>
+                  </div>
+                )}
+                {/* Location badge */}
+                {locationTag && (
+                  <div
+                    data-ocid="camera_reel.location_badge"
+                    className="absolute bottom-4 left-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+                    style={{
+                      background: "rgba(0,0,0,0.65)",
+                      backdropFilter: "blur(8px)",
+                      border: "1px solid rgba(34,197,94,0.4)",
+                    }}
+                  >
+                    <MapPin
+                      size={11}
+                      className="text-green-400 flex-shrink-0"
+                    />
+                    <span className="text-white text-[11px] font-medium">
+                      {locationTag}
+                    </span>
+                  </div>
+                )}
+                {locationError && (
+                  <div
+                    data-ocid="camera_reel.location_error"
+                    className="absolute bottom-4 left-4 right-4 flex items-center gap-2 px-3 py-2 rounded-xl"
+                    style={{
+                      background: "rgba(239,68,68,0.85)",
+                      backdropFilter: "blur(8px)",
+                    }}
+                  >
+                    <MapPin size={12} className="text-white flex-shrink-0" />
+                    <span className="text-white text-xs">{locationError}</span>
+                    <button
+                      type="button"
+                      onClick={() => setLocationError(null)}
+                      className="ml-auto"
+                    >
+                      <X size={12} className="text-white/70" />
+                    </button>
                   </div>
                 )}
               </div>
@@ -1281,6 +1395,84 @@ export default function CameraReelModal({ open, onClose }: Props) {
       </AnimatePresence>
 
       {/* Music Picker Panel */}
+      {/* Location Permission Modal */}
+      <AnimatePresence>
+        {locationPermModal && (
+          <motion.div
+            data-ocid="camera_reel.location_modal"
+            className="fixed inset-0 z-[200] flex items-center justify-center px-6"
+            style={{
+              background: "rgba(0,0,0,0.75)",
+              backdropFilter: "blur(8px)",
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="w-full max-w-xs rounded-3xl p-6 flex flex-col gap-4"
+              style={{
+                background: "linear-gradient(135deg, #1e1b4b 0%, #2d1b69 100%)",
+                border: "1px solid rgba(168,85,247,0.35)",
+                boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
+              }}
+              initial={{ scale: 0.85, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.85, y: 30 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            >
+              <div className="flex flex-col items-center gap-3 text-center">
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center"
+                  style={{
+                    background: "linear-gradient(135deg, #22c55e, #16a34a)",
+                  }}
+                >
+                  <MapPin size={28} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-lg">
+                    📍 Location Permission
+                  </h3>
+                  <p className="text-white/60 text-sm mt-1 leading-relaxed">
+                    Reels पर location tag लगाने के लिए GPS access चाहिए।
+                    <br />
+                    <span className="text-white/40 text-xs">
+                      We need GPS to tag your Reel with your location.
+                    </span>
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3 mt-1">
+                <button
+                  type="button"
+                  data-ocid="camera_reel.location_modal.skip_button"
+                  onClick={() => setLocationPermModal(false)}
+                  className="flex-1 py-2.5 rounded-2xl text-white/70 text-sm font-medium transition-all"
+                  style={{
+                    background: "rgba(255,255,255,0.08)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                  }}
+                >
+                  Skip
+                </button>
+                <button
+                  type="button"
+                  data-ocid="camera_reel.location_modal.allow_button"
+                  onClick={requestLocation}
+                  className="flex-1 py-2.5 rounded-2xl text-white text-sm font-bold transition-all"
+                  style={{
+                    background: "linear-gradient(135deg, #22c55e, #16a34a)",
+                    boxShadow: "0 4px 16px rgba(34,197,94,0.4)",
+                  }}
+                >
+                  Allow Location
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <MusicPickerPanel
         open={isMusicPickerOpen}
         onClose={() => setIsMusicPickerOpen(false)}

@@ -1,32 +1,37 @@
 # Komofast Social
 
 ## Current State
-Admin panel exists at `/admin` with 7 tabs: Posts, Users, Moderation, Marketplace, Monetization, Support, Owner. It is functional but not optimized for mobile screens.
+App has Reels camera with 100+ live filters, Beauty Camera, music, GPS, video quality settings, and a separate Video Editor with zoom keyframes. Filters are applied as CSS/canvas overlays on the camera preview.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Mobile-first responsive layout for Admin panel
-- Bottom tab navigation on mobile (replaces horizontal tab bar)
-- Mobile-friendly cards, padding, touch targets
-- Collapsible sidebar on mobile with hamburger menu
-- Mobile header with back button and title
-- Stats cards in 2-column grid on mobile
-- Swipeable tabs on mobile
+- **Inbuilt Reel Filter Editor** — a full-featured post-capture editing suite inspired by InShot, PicsArt, and VSCO
+- **Edit tabs**: Filters, Adjust, Effects, Text, Stickers, Crop/Trim
+- **Filters tab**: VSCO-style filter presets grid (C1, A4, HB1, Fade, Moody, Film, etc.) with intensity slider
+- **Adjust tab**: Brightness, Contrast, Saturation, Highlights, Shadows, Warmth, Vignette, Sharpness sliders (InShot/VSCO style)
+- **Effects tab**: Glitch, Blur, Bokeh, Neon, VHS, Cinematic, Dust & Scratches (PicsArt style)
+- **Text tab**: Add text overlays with font styles, colors, background, and size
+- **Stickers tab**: Emoji + animated sticker grid (categories: Trending, Emoji, Fun, Love)
+- **Crop/Trim tab**: Aspect ratio presets (9:16, 1:1, 4:5, 16:9) and video trim timeline
+- New `/reel-editor` route for the editor page
+- Access from Reels camera after recording via "Edit" button
 
 ### Modify
-- Admin.tsx: make all tab navigation, tables, forms, and cards fully responsive for small screens
-- Tab bar: on mobile, show scrollable horizontal tabs or bottom nav with icons
-- Tables: convert to card-based list on mobile
-- Buttons: larger touch targets (min 44px) on mobile
+- Reels camera "Next" button should navigate to `/reel-editor`
 
 ### Remove
 - Nothing removed
 
 ## Implementation Plan
-1. Refactor Admin.tsx tab navigation to be mobile-responsive (horizontal scrollable tabs with icons on mobile)
-2. Convert data tables to mobile card layout using responsive CSS
-3. Improve mobile header (sticky, with tab title)
-4. Make all buttons and inputs mobile touch-friendly
-5. Ensure stats/metric cards use 2-column grid on mobile
-6. Test all 7 tabs for mobile layout
+1. Create `/reel-editor` page with full-screen editor UI
+2. Bottom tab bar: Filters | Adjust | Effects | Text | Stickers | Trim
+3. Filters tab: scrollable horizontal grid of filter thumbnails with preview and intensity slider
+4. Adjust tab: vertical list of sliders (Brightness, Contrast, Saturation, Warmth, Highlights, Shadows, Vignette, Sharpness)
+5. Effects tab: grid of special effects with preview thumbnails
+6. Text tab: tap to add text overlay, font/color/size picker
+7. Stickers tab: emoji/sticker grid with categories
+8. Trim tab: video timeline scrubber with start/end handles
+9. Top bar: Back, Undo, Redo, Export/Share button
+10. Full-screen video/image preview with applied effects
+11. Add to App.tsx routing

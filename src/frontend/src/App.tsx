@@ -46,6 +46,7 @@ const VideoEditor = lazy(() => import("./pages/VideoEditor"));
 const DonatePage = lazy(() => import("./pages/DonatePage"));
 const CreatorPrivacy = lazy(() => import("./pages/CreatorPrivacy"));
 const CountryDetect = lazy(() => import("./pages/CountryDetect"));
+const ReelEditor = lazy(() => import("./pages/ReelEditor"));
 
 function PageLoader() {
   return (
@@ -147,6 +148,7 @@ function Router() {
     if (currentPath === "/donate") return <DonatePage />;
     if (currentPath === "/creator-privacy") return <CreatorPrivacy />;
     if (currentPath === "/country-detect") return <CountryDetect />;
+    if (currentPath === "/reel-editor") return <ReelEditor />;
     return <Home />;
   };
 

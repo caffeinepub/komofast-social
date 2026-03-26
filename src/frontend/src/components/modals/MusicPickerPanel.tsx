@@ -495,7 +495,7 @@ export default function MusicPickerPanel({
                   data-ocid="music_picker.search_input"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search songs, artists..."
+                  placeholder="🔍 Song खोजें... / Search song..."
                   className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-white/30"
                 />
                 {query && (
@@ -648,7 +648,8 @@ export default function MusicPickerPanel({
                 {filtered.length === 0 && (
                   <div className="py-10 text-center">
                     <Music size={32} className="text-white/20 mx-auto mb-2" />
-                    <p className="text-white/40 text-sm">No songs found</p>
+                    <p className="text-white/40 text-sm">कोई song नहीं मिला</p>
+                    <p className="text-white/30 text-xs mt-1">No songs found</p>
                   </div>
                 )}
               </div>

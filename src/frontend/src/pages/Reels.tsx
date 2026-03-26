@@ -1,8 +1,9 @@
-import { Film, Play, X } from "lucide-react";
+import { Edit2, Film, Play, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import ReelCard from "../components/feed/ReelCard";
 import ReelAIEditorModal from "../components/modals/ReelAIEditorModal";
+import { useApp } from "../context/AppContext";
 import { MOCK_REELS } from "../data/mockData";
 
 type Reel = (typeof MOCK_REELS)[number];
@@ -88,6 +89,7 @@ function ReelDetailModal({
 
 export default function Reels() {
   const [selectedReel, setSelectedReel] = useState<Reel | null>(null);
+  const { navigate } = useApp();
   const [aiEditorOpen, setAiEditorOpen] = useState(false);
 
   const handleCreateReel = () => {
@@ -107,16 +109,28 @@ export default function Reels() {
           </div>
           <h1 className="text-xl font-bold text-foreground">Reels</h1>
         </div>
-        <button
-          type="button"
-          data-ocid="reels.create.button"
-          onClick={handleCreateReel}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold text-white"
-          style={{ background: "linear-gradient(135deg, #A855F7, #EC4899)" }}
-        >
-          <Film size={14} />
-          Create Reel
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            data-ocid="reels.edit.button"
+            onClick={() => navigate("/reel-editor")}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold text-white"
+            style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
+          >
+            <Edit2 size={14} />
+            Edit
+          </button>
+          <button
+            type="button"
+            data-ocid="reels.create.button"
+            onClick={handleCreateReel}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold text-white"
+            style={{ background: "linear-gradient(135deg, #A855F7, #EC4899)" }}
+          >
+            <Film size={14} />
+            Create Reel
+          </button>
+        </div>
       </div>
 
       {/* Grid */}
