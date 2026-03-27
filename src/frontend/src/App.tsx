@@ -47,6 +47,7 @@ const DonatePage = lazy(() => import("./pages/DonatePage"));
 const CreatorPrivacy = lazy(() => import("./pages/CreatorPrivacy"));
 const CountryDetect = lazy(() => import("./pages/CountryDetect"));
 const ReelEditor = lazy(() => import("./pages/ReelEditor"));
+const BusinessAccount = lazy(() => import("./pages/BusinessAccount"));
 
 function PageLoader() {
   return (
@@ -134,6 +135,7 @@ function Router() {
     if (currentPath === "/wallet") return <WalletPage />;
     if (currentPath === "/creator") return <CreatorDashboard />;
     if (currentPath === "/earning-account") return <EarningAccount />;
+    if (currentPath === "/business-account") return <BusinessAccount />;
     if (currentPath === "/groups") return <Groups />;
     if (currentPath === "/watch") return <Watch />;
     if (currentPath === "/friends") return <FriendsPage />;
