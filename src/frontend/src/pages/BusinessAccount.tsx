@@ -5,20 +5,29 @@ import {
   BadgeCheck,
   BarChart2,
   Briefcase,
+  Building2,
+  CheckCircle2,
+  ChevronDown,
   ChevronRight,
+  ChevronUp,
   DollarSign,
   Eye,
+  FlaskConical,
+  IndianRupee,
   MousePointerClick,
   Pause,
   Play,
   Plus,
   Settings,
+  Smartphone,
   Sparkles,
   Target,
   TrendingUp,
+  Users,
+  Video,
   Zap,
 } from "lucide-react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useApp } from "../context/AppContext";
@@ -37,7 +46,9 @@ const CAMPAIGNS = [
     clicks: 1840,
     ctr: 3.8,
     reach: 31000,
-    objective: "Reach",
+    objective: "Video Views",
+    adType: "video",
+    commissionEarned: 2400,
   },
   {
     id: 2,
@@ -49,7 +60,9 @@ const CAMPAIGNS = [
     clicks: 3120,
     ctr: 3.4,
     reach: 67000,
-    objective: "Traffic",
+    objective: "Sales",
+    adType: "image",
+    commissionEarned: 8600,
   },
   {
     id: 3,
@@ -61,7 +74,36 @@ const CAMPAIGNS = [
     clicks: 660,
     ctr: 3.0,
     reach: 15200,
-    objective: "Sales",
+    objective: "App Install",
+    adType: "app",
+    commissionEarned: 1200,
+  },
+];
+
+const CLIENT_CAMPAIGNS = [
+  {
+    id: 1,
+    client: "Raj Clothing Store",
+    budget: 15000,
+    status: "active",
+    charge: 8000,
+    revenue: 42000,
+  },
+  {
+    id: 2,
+    client: "Priya Beauty Salon",
+    budget: 8000,
+    status: "active",
+    charge: 5000,
+    revenue: 18500,
+  },
+  {
+    id: 3,
+    client: "TechGadgets Shop",
+    budget: 25000,
+    status: "paused",
+    charge: 12000,
+    revenue: 0,
   },
 ];
 
@@ -121,10 +163,24 @@ const MONTHLY = [
 
 const maxEarn = Math.max(...MONTHLY.map((d) => d.earn));
 
+const INTERESTS = [
+  "Fashion",
+  "Beauty",
+  "Food",
+  "Travel",
+  "Tech",
+  "Sports",
+  "Music",
+  "Fitness",
+  "Gaming",
+  "Education",
+  "Business",
+  "Movies",
+];
+
 function EarningTab() {
   return (
     <div className="space-y-5">
-      {/* Balance Card */}
       <motion.div
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -202,7 +258,6 @@ function EarningTab() {
         </div>
       </motion.div>
 
-      {/* Earning Breakdown */}
       <div>
         <p className="text-[13px] font-semibold text-komo-text-secondary mb-3 flex items-center gap-1.5">
           <DollarSign size={14} className="text-komo-blue" /> Earning Breakdown
@@ -238,7 +293,6 @@ function EarningTab() {
         </div>
       </div>
 
-      {/* Monthly Chart */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -317,13 +371,34 @@ function EarningTab() {
 
 function AdsManagerTab() {
   const [campaigns, setCampaigns] = useState(CAMPAIGNS);
+  const [clientCampaigns, setClientCampaigns] = useState(CLIENT_CAMPAIGNS);
   const [showCreate, setShowCreate] = useState(false);
+  const [createStep, setCreateStep] = useState(1);
+  const [activeSection, setActiveSection] = useState<"own" | "client">("own");
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [abTesting, setAbTesting] = useState(false);
   const [form, setForm] = useState({
     name: "",
-    objective: "Reach",
+    objective: "Video Views",
+    adType: "video",
     budget: "",
     duration: "7",
+    ageMin: "18",
+    ageMax: "35",
+    location: "India",
+    productFocus: "",
+    commissionRate: "10",
+    variantA: "",
+    variantB: "",
   });
+
+  const toggleInterest = (interest: string) => {
+    setSelectedInterests((prev) =>
+      prev.includes(interest)
+        ? prev.filter((i) => i !== interest)
+        : [...prev, interest],
+    );
+  };
 
   const toggleStatus = (id: number) => {
     setCampaigns((prev) =>
@@ -353,17 +428,44 @@ function AdsManagerTab() {
         ctr: 0,
         reach: 0,
         objective: form.objective,
+        adType: form.adType,
+        commissionEarned: 0,
       },
       ...prev,
     ]);
     setShowCreate(false);
-    setForm({ name: "", objective: "Reach", budget: "", duration: "7" });
+    setCreateStep(1);
+    setSelectedInterests([]);
+    setAbTesting(false);
+    setForm({
+      name: "",
+      objective: "Video Views",
+      adType: "video",
+      budget: "",
+      duration: "7",
+      ageMin: "18",
+      ageMax: "35",
+      location: "India",
+      productFocus: "",
+      commissionRate: "10",
+      variantA: "",
+      variantB: "",
+    });
     toast.success("Campaign launch हो गया! 🚀");
   };
 
+  const adTypeIcon = (type: string) => {
+    if (type === "video") return <Video size={11} className="text-blue-400" />;
+    if (type === "app")
+      return <Smartphone size={11} className="text-green-400" />;
+    return <Eye size={11} className="text-purple-400" />;
+  };
+
+  const STEP_LABELS = ["Ad Type", "Audience", "Product", "Budget"];
+
   return (
     <div className="space-y-5">
-      {/* Ad Account Stats */}
+      {/* Stats Row */}
       <div className="grid grid-cols-3 gap-3">
         {[
           {
@@ -379,9 +481,9 @@ function AdsManagerTab() {
             color: "rgba(59,130,246,0.15)",
           },
           {
-            label: "Avg CTR",
-            value: "3.4%",
-            icon: <MousePointerClick size={14} className="text-green-400" />,
+            label: "Commission",
+            value: "₹12.2K",
+            icon: <IndianRupee size={14} className="text-green-400" />,
             color: "rgba(34,197,94,0.15)",
           },
         ].map((stat) => (
@@ -402,199 +504,814 @@ function AdsManagerTab() {
         ))}
       </div>
 
-      {/* Create Campaign */}
-      <Button
-        className="w-full komo-gradient border-0 text-white h-10 text-[13px] font-semibold"
-        onClick={() => setShowCreate(!showCreate)}
-      >
-        <Plus size={15} className="mr-2" /> New Campaign बनाएं
-      </Button>
-
-      {showCreate && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl p-4 space-y-3"
-          style={{
-            background: "rgba(47,168,255,0.07)",
-            border: "1px solid rgba(47,168,255,0.2)",
-          }}
-        >
-          <p className="text-[13px] font-semibold text-foreground flex items-center gap-1.5">
-            <Sparkles size={13} className="text-komo-blue" /> New Campaign
-          </p>
-          <input
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[13px] text-foreground placeholder-komo-text-muted focus:outline-none focus:border-komo-blue"
-            placeholder="Campaign का नाम"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-          />
-          <select
-            className="w-full bg-[#11161D] border border-white/10 rounded-xl px-3 py-2 text-[13px] text-foreground focus:outline-none focus:border-komo-blue"
-            value={form.objective}
-            onChange={(e) => setForm({ ...form, objective: e.target.value })}
-          >
-            <option value="Reach">Objective: Reach</option>
-            <option value="Traffic">Objective: Traffic</option>
-            <option value="Sales">Objective: Sales</option>
-            <option value="Engagement">Objective: Engagement</option>
-            <option value="Brand Awareness">Objective: Brand Awareness</option>
-          </select>
-          <div className="flex gap-3">
-            <input
-              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[13px] text-foreground placeholder-komo-text-muted focus:outline-none focus:border-komo-blue"
-              placeholder="Budget (₹)"
-              type="number"
-              value={form.budget}
-              onChange={(e) => setForm({ ...form, budget: e.target.value })}
-            />
-            <select
-              className="flex-1 bg-[#11161D] border border-white/10 rounded-xl px-3 py-2 text-[13px] text-foreground focus:outline-none focus:border-komo-blue"
-              value={form.duration}
-              onChange={(e) => setForm({ ...form, duration: e.target.value })}
-            >
-              <option value="7">7 Days</option>
-              <option value="14">14 Days</option>
-              <option value="30">30 Days</option>
-            </select>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              className="flex-1 komo-gradient border-0 text-white h-9 text-[12px]"
-              onClick={createCampaign}
-            >
-              <Zap size={13} className="mr-1.5" /> Launch
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-1 h-9 text-[12px] border-white/20 text-white hover:bg-white/10"
-              onClick={() => setShowCreate(false)}
-            >
-              Cancel
-            </Button>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Campaigns List */}
-      <div className="space-y-3">
-        <p className="text-[13px] font-semibold text-komo-text-secondary flex items-center gap-1.5">
-          <Target size={14} className="text-komo-purple" /> Active Campaigns
-        </p>
-        {campaigns.map((c, i) => (
-          <motion.div
-            key={c.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: i * 0.06 }}
-            className="rounded-2xl p-4"
+      {/* Section Tabs: Own / Client */}
+      <div className="flex gap-2">
+        {(["own", "client"] as const).map((sec) => (
+          <button
+            key={sec}
+            type="button"
+            onClick={() => setActiveSection(sec)}
+            className="flex-1 h-9 rounded-full text-[12px] font-semibold transition-all"
             style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
+              background:
+                activeSection === sec
+                  ? "linear-gradient(135deg, #2fa8ff, #a855f7)"
+                  : "rgba(255,255,255,0.06)",
+              color: activeSection === sec ? "#fff" : "rgba(255,255,255,0.5)",
+              border:
+                activeSection === sec
+                  ? "none"
+                  : "1px solid rgba(255,255,255,0.08)",
             }}
           >
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1 min-w-0 pr-2">
-                <p className="text-[13px] font-semibold text-foreground truncate">
-                  {c.name}
-                </p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-[10px] text-komo-text-muted">
-                    {c.objective}
-                  </span>
-                  <span
-                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                      c.status === "active"
-                        ? "bg-green-500/15 text-green-400 border border-green-500/25"
-                        : "bg-yellow-500/15 text-yellow-400 border border-yellow-500/25"
-                    }`}
-                  >
-                    {c.status === "active" ? "🟢 Active" : "⏸ Paused"}
-                  </span>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => toggleStatus(c.id)}
-                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
-                style={{
-                  background:
-                    c.status === "active"
-                      ? "rgba(239,68,68,0.15)"
-                      : "rgba(34,197,94,0.15)",
-                }}
-              >
-                {c.status === "active" ? (
-                  <Pause size={13} className="text-red-400" />
-                ) : (
-                  <Play size={13} className="text-green-400" />
-                )}
-              </button>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="mb-3">
-              <div className="flex justify-between mb-1">
-                <span className="text-[11px] text-komo-text-muted">Spend</span>
-                <span className="text-[11px] text-komo-text-muted">
-                  ₹{c.spent} / ₹{c.budget}
-                </span>
-              </div>
-              <div className="h-2 rounded-full bg-white/5 overflow-hidden">
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width: `${(c.spent / c.budget) * 100}%`,
-                    background: "linear-gradient(90deg, #2fa8ff, #a855f7)",
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                {
-                  label: "Impressions",
-                  value:
-                    c.impressions >= 1000
-                      ? `${(c.impressions / 1000).toFixed(1)}K`
-                      : c.impressions,
-                  icon: <Eye size={11} />,
-                },
-                {
-                  label: "Clicks",
-                  value:
-                    c.clicks >= 1000
-                      ? `${(c.clicks / 1000).toFixed(1)}K`
-                      : c.clicks,
-                  icon: <MousePointerClick size={11} />,
-                },
-                {
-                  label: "CTR",
-                  value: `${c.ctr}%`,
-                  icon: <TrendingUp size={11} />,
-                },
-              ].map((stat) => (
-                <div
-                  key={stat.label}
-                  className="text-center p-2 rounded-xl"
-                  style={{ background: "rgba(255,255,255,0.04)" }}
-                >
-                  <div className="flex justify-center text-komo-text-muted mb-1">
-                    {stat.icon}
-                  </div>
-                  <p className="text-[13px] font-bold komo-gradient-text">
-                    {stat.value}
-                  </p>
-                  <p className="text-[10px] text-komo-text-muted">
-                    {stat.label}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </motion.div>
+            {sec === "own" ? "🎯 Apne Ads" : "🏢 Client Ads"}
+          </button>
         ))}
       </div>
+
+      {activeSection === "own" && (
+        <div className="space-y-4">
+          {/* Create Button */}
+          <Button
+            className="w-full komo-gradient border-0 text-white h-10 text-[13px] font-semibold"
+            onClick={() => {
+              setShowCreate(!showCreate);
+              setCreateStep(1);
+            }}
+          >
+            <Plus size={15} className="mr-2" /> New Campaign बनाएं
+          </Button>
+
+          {/* Step-by-step Campaign Creator */}
+          <AnimatePresence>
+            {showCreate && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="rounded-2xl p-4 space-y-4"
+                style={{
+                  background: "rgba(47,168,255,0.07)",
+                  border: "1px solid rgba(47,168,255,0.2)",
+                }}
+              >
+                {/* Step Indicator */}
+                <div className="flex items-center gap-1 mb-2">
+                  {STEP_LABELS.map((label, i) => (
+                    <div
+                      key={label}
+                      className="flex-1 flex flex-col items-center gap-1"
+                    >
+                      <div
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold transition-all ${createStep > i + 1 ? "bg-green-500 text-white" : createStep === i + 1 ? "bg-komo-blue text-white" : "bg-white/10 text-white/30"}`}
+                      >
+                        {createStep > i + 1 ? (
+                          <CheckCircle2 size={12} />
+                        ) : (
+                          i + 1
+                        )}
+                      </div>
+                      <span
+                        className={`text-[9px] text-center leading-tight ${createStep === i + 1 ? "text-komo-blue font-semibold" : "text-white/30"}`}
+                      >
+                        {label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Step 1: Ad Type + Objective */}
+                {createStep === 1 && (
+                  <div className="space-y-3">
+                    <p className="text-[13px] font-semibold text-foreground flex items-center gap-1.5">
+                      <Video size={13} className="text-komo-blue" /> Ad Type चुनें
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        {
+                          type: "video",
+                          label: "🎥 Video",
+                          desc: "Zyada reach",
+                        },
+                        {
+                          type: "image",
+                          label: "🖼️ Image",
+                          desc: "Single product",
+                        },
+                        {
+                          type: "app",
+                          label: "📱 App Install",
+                          desc: "Users badhao",
+                        },
+                      ].map((opt) => (
+                        <button
+                          key={opt.type}
+                          type="button"
+                          onClick={() => setForm({ ...form, adType: opt.type })}
+                          className="p-3 rounded-xl text-center transition-all"
+                          style={{
+                            background:
+                              form.adType === opt.type
+                                ? "rgba(47,168,255,0.2)"
+                                : "rgba(255,255,255,0.04)",
+                            border: `1px solid ${form.adType === opt.type ? "rgba(47,168,255,0.5)" : "rgba(255,255,255,0.08)"}`,
+                          }}
+                        >
+                          <p className="text-[14px]">
+                            {opt.label.split(" ")[0]}
+                          </p>
+                          <p className="text-[11px] font-semibold text-foreground">
+                            {opt.label.split(" ").slice(1).join(" ")}
+                          </p>
+                          <p className="text-[10px] text-komo-text-muted">
+                            {opt.desc}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                    <input
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[13px] text-foreground placeholder-komo-text-muted focus:outline-none focus:border-komo-blue"
+                      placeholder="Campaign का नाम"
+                      value={form.name}
+                      onChange={(e) =>
+                        setForm({ ...form, name: e.target.value })
+                      }
+                    />
+                    <select
+                      className="w-full bg-[#11161D] border border-white/10 rounded-xl px-3 py-2 text-[13px] text-foreground focus:outline-none focus:border-komo-blue"
+                      value={form.objective}
+                      onChange={(e) =>
+                        setForm({ ...form, objective: e.target.value })
+                      }
+                    >
+                      <option value="Video Views">🎥 Video Views</option>
+                      <option value="Traffic">🌐 Traffic</option>
+                      <option value="Sales">💰 Sales (Commission)</option>
+                      <option value="App Install">📱 App Install</option>
+                      <option value="Brand Awareness">
+                        📣 Brand Awareness
+                      </option>
+                      <option value="Engagement">❤️ Engagement</option>
+                    </select>
+                    <Button
+                      className="w-full komo-gradient border-0 text-white h-9 text-[13px]"
+                      onClick={() => setCreateStep(2)}
+                    >
+                      अगला →
+                    </Button>
+                  </div>
+                )}
+
+                {/* Step 2: Audience Targeting */}
+                {createStep === 2 && (
+                  <div className="space-y-3">
+                    <p className="text-[13px] font-semibold text-foreground flex items-center gap-1.5">
+                      <Users size={13} className="text-komo-purple" /> Audience
+                      Target करें
+                    </p>
+                    <div>
+                      <p className="text-[11px] text-komo-text-muted mb-2">
+                        Age Range
+                      </p>
+                      <div className="flex gap-2 items-center">
+                        <select
+                          className="flex-1 bg-[#11161D] border border-white/10 rounded-xl px-3 py-2 text-[13px] text-foreground focus:outline-none focus:border-komo-blue"
+                          value={form.ageMin}
+                          onChange={(e) =>
+                            setForm({ ...form, ageMin: e.target.value })
+                          }
+                        >
+                          {["13", "18", "21", "25", "30", "35", "40", "45"].map(
+                            (a) => (
+                              <option key={a} value={a}>
+                                {a}
+                              </option>
+                            ),
+                          )}
+                        </select>
+                        <span className="text-komo-text-muted text-[13px]">
+                          –
+                        </span>
+                        <select
+                          className="flex-1 bg-[#11161D] border border-white/10 rounded-xl px-3 py-2 text-[13px] text-foreground focus:outline-none focus:border-komo-blue"
+                          value={form.ageMax}
+                          onChange={(e) =>
+                            setForm({ ...form, ageMax: e.target.value })
+                          }
+                        >
+                          {[
+                            "25",
+                            "30",
+                            "35",
+                            "40",
+                            "45",
+                            "50",
+                            "55",
+                            "65+",
+                          ].map((a) => (
+                            <option key={a} value={a}>
+                              {a}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-komo-text-muted mb-2">
+                        Location
+                      </p>
+                      <select
+                        className="w-full bg-[#11161D] border border-white/10 rounded-xl px-3 py-2 text-[13px] text-foreground focus:outline-none focus:border-komo-blue"
+                        value={form.location}
+                        onChange={(e) =>
+                          setForm({ ...form, location: e.target.value })
+                        }
+                      >
+                        <option value="India">🇮🇳 India (All)</option>
+                        <option value="Delhi">Delhi NCR</option>
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="Bangalore">Bangalore</option>
+                        <option value="UP-Bihar">UP / Bihar</option>
+                        <option value="South">South India</option>
+                      </select>
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-komo-text-muted mb-2">
+                        Interests चुनें ({selectedInterests.length} selected)
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {INTERESTS.map((interest) => (
+                          <button
+                            key={interest}
+                            type="button"
+                            onClick={() => toggleInterest(interest)}
+                            className="px-3 py-1 rounded-full text-[11px] font-medium transition-all"
+                            style={{
+                              background: selectedInterests.includes(interest)
+                                ? "rgba(47,168,255,0.25)"
+                                : "rgba(255,255,255,0.06)",
+                              border: `1px solid ${selectedInterests.includes(interest) ? "rgba(47,168,255,0.5)" : "rgba(255,255,255,0.1)"}`,
+                              color: selectedInterests.includes(interest)
+                                ? "#93c5fd"
+                                : "rgba(255,255,255,0.5)",
+                            }}
+                          >
+                            {interest}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1 h-9 text-[12px] border-white/20 text-white hover:bg-white/10"
+                        onClick={() => setCreateStep(1)}
+                      >
+                        ← पीछे
+                      </Button>
+                      <Button
+                        className="flex-1 komo-gradient border-0 text-white h-9 text-[13px]"
+                        onClick={() => setCreateStep(3)}
+                      >
+                        अगला →
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 3: Product Focus */}
+                {createStep === 3 && (
+                  <div className="space-y-3">
+                    <p className="text-[13px] font-semibold text-foreground flex items-center gap-1.5">
+                      <Target size={13} className="text-yellow-400" /> Product
+                      Focus
+                    </p>
+                    <div
+                      className="rounded-xl p-3"
+                      style={{
+                        background: "rgba(255,200,50,0.08)",
+                        border: "1px solid rgba(255,200,50,0.2)",
+                      }}
+                    >
+                      <p className="text-[11px] text-yellow-300 font-semibold mb-1">
+                        💡 Pro Tip
+                      </p>
+                      <p className="text-[11px] text-komo-text-muted">
+                        Ek campaign mein sirf ek product focus karo — zyada
+                        conversion aata hai!
+                      </p>
+                    </div>
+                    <input
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[13px] text-foreground placeholder-komo-text-muted focus:outline-none focus:border-komo-blue"
+                      placeholder="Product/Service ka naam (e.g. Dance Course ₹999)"
+                      value={form.productFocus}
+                      onChange={(e) =>
+                        setForm({ ...form, productFocus: e.target.value })
+                      }
+                    />
+                    {form.objective === "Sales (Commission)" ||
+                    form.objective === "Sales" ? (
+                      <div>
+                        <p className="text-[11px] text-komo-text-muted mb-1">
+                          Commission % (har sale pe)
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[13px] text-foreground placeholder-komo-text-muted focus:outline-none focus:border-komo-blue"
+                            placeholder="e.g. 10"
+                            value={form.commissionRate}
+                            onChange={(e) =>
+                              setForm({
+                                ...form,
+                                commissionRate: e.target.value,
+                              })
+                            }
+                          />
+                          <span className="text-[14px] font-bold text-green-400">
+                            %
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-green-400 mt-1">
+                          ₹1000 sale pe = ₹
+                          {(
+                            (1000 * Number(form.commissionRate || 0)) /
+                            100
+                          ).toFixed(0)}{" "}
+                          commission
+                        </p>
+                      </div>
+                    ) : null}
+                    {/* A/B Testing Toggle */}
+                    <div
+                      className="flex items-center justify-between p-3 rounded-xl"
+                      style={{
+                        background: "rgba(168,85,247,0.08)",
+                        border: "1px solid rgba(168,85,247,0.2)",
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <FlaskConical size={14} className="text-purple-400" />
+                        <div>
+                          <p className="text-[12px] font-semibold text-foreground">
+                            A/B Test (Trial & Error)
+                          </p>
+                          <p className="text-[10px] text-komo-text-muted">
+                            2 versions test karo, best perform wala chuno
+                          </p>
+                        </div>
+                      </div>
+                      <div
+                        className="w-10 h-5 rounded-full cursor-pointer transition-colors"
+                        style={{
+                          background: abTesting
+                            ? "linear-gradient(90deg, #2fa8ff, #a855f7)"
+                            : "rgba(255,255,255,0.15)",
+                        }}
+                        onClick={() => setAbTesting(!abTesting)}
+                        onKeyDown={(e) =>
+                          e.key === "Enter" && setAbTesting(!abTesting)
+                        }
+                      >
+                        <div
+                          className={`w-4 h-4 rounded-full bg-white shadow-sm mt-0.5 transition-transform ${abTesting ? "translate-x-5" : "translate-x-0.5"}`}
+                        />
+                      </div>
+                    </div>
+                    {abTesting && (
+                      <div className="space-y-2">
+                        <input
+                          className="w-full bg-white/5 border border-purple-500/30 rounded-xl px-3 py-2 text-[13px] text-foreground placeholder-komo-text-muted focus:outline-none"
+                          placeholder="Version A – Headline (e.g. 'Sirf ₹499 mein seekho!')"
+                          value={form.variantA}
+                          onChange={(e) =>
+                            setForm({ ...form, variantA: e.target.value })
+                          }
+                        />
+                        <input
+                          className="w-full bg-white/5 border border-blue-500/30 rounded-xl px-3 py-2 text-[13px] text-foreground placeholder-komo-text-muted focus:outline-none"
+                          placeholder="Version B – Headline (e.g. 'Free Trial Available!')"
+                          value={form.variantB}
+                          onChange={(e) =>
+                            setForm({ ...form, variantB: e.target.value })
+                          }
+                        />
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1 h-9 text-[12px] border-white/20 text-white hover:bg-white/10"
+                        onClick={() => setCreateStep(2)}
+                      >
+                        ← पीछे
+                      </Button>
+                      <Button
+                        className="flex-1 komo-gradient border-0 text-white h-9 text-[13px]"
+                        onClick={() => setCreateStep(4)}
+                      >
+                        अगला →
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 4: Budget */}
+                {createStep === 4 && (
+                  <div className="space-y-3">
+                    <p className="text-[13px] font-semibold text-foreground flex items-center gap-1.5">
+                      <IndianRupee size={13} className="text-green-400" />{" "}
+                      Budget Set करें
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {["100", "250", "500", "1000", "2000", "5000"].map(
+                        (b) => (
+                          <button
+                            key={b}
+                            type="button"
+                            onClick={() => setForm({ ...form, budget: b })}
+                            className="h-9 rounded-xl text-[12px] font-semibold transition-all"
+                            style={{
+                              background:
+                                form.budget === b
+                                  ? "rgba(47,168,255,0.25)"
+                                  : "rgba(255,255,255,0.06)",
+                              border: `1px solid ${form.budget === b ? "rgba(47,168,255,0.5)" : "rgba(255,255,255,0.08)"}`,
+                              color:
+                                form.budget === b
+                                  ? "#93c5fd"
+                                  : "rgba(255,255,255,0.6)",
+                            }}
+                          >
+                            ₹{b}
+                          </button>
+                        ),
+                      )}
+                    </div>
+                    <input
+                      type="number"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[13px] text-foreground placeholder-komo-text-muted focus:outline-none focus:border-komo-blue"
+                      placeholder="Custom Budget (₹)"
+                      value={form.budget}
+                      onChange={(e) =>
+                        setForm({ ...form, budget: e.target.value })
+                      }
+                    />
+                    <select
+                      className="w-full bg-[#11161D] border border-white/10 rounded-xl px-3 py-2 text-[13px] text-foreground focus:outline-none focus:border-komo-blue"
+                      value={form.duration}
+                      onChange={(e) =>
+                        setForm({ ...form, duration: e.target.value })
+                      }
+                    >
+                      <option value="7">7 Days</option>
+                      <option value="14">14 Days</option>
+                      <option value="30">30 Days</option>
+                    </select>
+                    {form.budget && (
+                      <div
+                        className="rounded-xl p-3"
+                        style={{
+                          background: "rgba(34,197,94,0.08)",
+                          border: "1px solid rgba(34,197,94,0.2)",
+                        }}
+                      >
+                        <p className="text-[11px] text-green-300 font-semibold">
+                          📊 Estimated Results
+                        </p>
+                        <p className="text-[11px] text-komo-text-muted mt-1">
+                          Daily spend: ₹
+                          {Math.round(
+                            Number(form.budget) / Number(form.duration),
+                          )}
+                        </p>
+                        <p className="text-[11px] text-komo-text-muted">
+                          Est. Reach:{" "}
+                          {(Number(form.budget) * 80).toLocaleString()}–
+                          {(Number(form.budget) * 150).toLocaleString()} people
+                        </p>
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1 h-9 text-[12px] border-white/20 text-white hover:bg-white/10"
+                        onClick={() => setCreateStep(3)}
+                      >
+                        ← पीछे
+                      </Button>
+                      <Button
+                        className="flex-1 komo-gradient border-0 text-white h-9 text-[13px] font-semibold"
+                        onClick={createCampaign}
+                      >
+                        <Zap size={13} className="mr-1.5" /> Launch 🚀
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Campaigns List */}
+          <div className="space-y-3">
+            <p className="text-[13px] font-semibold text-komo-text-secondary flex items-center gap-1.5">
+              <Target size={14} className="text-komo-purple" /> My Campaigns
+            </p>
+            {campaigns.map((c, i) => (
+              <motion.div
+                key={c.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: i * 0.06 }}
+                className="rounded-2xl p-4"
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                }}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0 pr-2">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      {adTypeIcon(c.adType)}
+                      <p className="text-[13px] font-semibold text-foreground truncate">
+                        {c.name}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-komo-text-muted">
+                        {c.objective}
+                      </span>
+                      <span
+                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${c.status === "active" ? "bg-green-500/15 text-green-400 border border-green-500/25" : "bg-yellow-500/15 text-yellow-400 border border-yellow-500/25"}`}
+                      >
+                        {c.status === "active" ? "🟢 Active" : "⏸ Paused"}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => toggleStatus(c.id)}
+                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
+                    style={{
+                      background:
+                        c.status === "active"
+                          ? "rgba(239,68,68,0.15)"
+                          : "rgba(34,197,94,0.15)",
+                    }}
+                  >
+                    {c.status === "active" ? (
+                      <Pause size={13} className="text-red-400" />
+                    ) : (
+                      <Play size={13} className="text-green-400" />
+                    )}
+                  </button>
+                </div>
+                <div className="mb-3">
+                  <div className="flex justify-between mb-1">
+                    <span className="text-[11px] text-komo-text-muted">
+                      Spend
+                    </span>
+                    <span className="text-[11px] text-komo-text-muted">
+                      ₹{c.spent} / ₹{c.budget}
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${c.budget > 0 ? (c.spent / c.budget) * 100 : 0}%`,
+                        background: "linear-gradient(90deg, #2fa8ff, #a855f7)",
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    {
+                      label: "Reach",
+                      value:
+                        c.reach >= 1000
+                          ? `${(c.reach / 1000).toFixed(0)}K`
+                          : c.reach,
+                      icon: <Eye size={11} />,
+                    },
+                    {
+                      label: "Clicks",
+                      value:
+                        c.clicks >= 1000
+                          ? `${(c.clicks / 1000).toFixed(1)}K`
+                          : c.clicks,
+                      icon: <MousePointerClick size={11} />,
+                    },
+                    {
+                      label: "CTR",
+                      value: `${c.ctr}%`,
+                      icon: <TrendingUp size={11} />,
+                    },
+                    {
+                      label: "Commission",
+                      value: `₹${(c.commissionEarned / 1000).toFixed(1)}K`,
+                      icon: <IndianRupee size={11} />,
+                    },
+                  ].map((stat) => (
+                    <div
+                      key={stat.label}
+                      className="text-center p-2 rounded-xl"
+                      style={{ background: "rgba(255,255,255,0.04)" }}
+                    >
+                      <div className="flex justify-center text-komo-text-muted mb-1">
+                        {stat.icon}
+                      </div>
+                      <p className="text-[12px] font-bold komo-gradient-text">
+                        {stat.value}
+                      </p>
+                      <p className="text-[9px] text-komo-text-muted">
+                        {stat.label}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Client Ads Section */}
+      {activeSection === "client" && (
+        <div className="space-y-4">
+          <div
+            className="rounded-2xl p-4"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(34,197,94,0.08), rgba(47,168,255,0.08))",
+              border: "1px solid rgba(34,197,94,0.25)",
+            }}
+          >
+            <p className="text-[13px] font-semibold text-green-300 flex items-center gap-1.5 mb-1">
+              <Building2 size={13} /> Client ke Ads chalakar Kamao
+            </p>
+            <p className="text-[11px] text-komo-text-muted">
+              Dusre businesses ke liye ads run karo aur monthly ₹5,000–₹50,000
+              charge karo
+            </p>
+          </div>
+
+          <Button
+            className="w-full komo-gradient border-0 text-white h-10 text-[13px] font-semibold"
+            onClick={() =>
+              toast.success("New client campaign form coming soon!")
+            }
+          >
+            <Plus size={15} className="mr-2" /> New Client Campaign
+          </Button>
+
+          <div className="space-y-3">
+            <p className="text-[13px] font-semibold text-komo-text-secondary flex items-center gap-1.5">
+              <Building2 size={14} className="text-komo-blue" /> Active Client
+              Campaigns
+            </p>
+            {clientCampaigns.map((c, i) => (
+              <motion.div
+                key={c.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: i * 0.06 }}
+                className="rounded-2xl p-4"
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                }}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <p className="text-[13px] font-semibold text-foreground">
+                      {c.client}
+                    </p>
+                    <span
+                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${c.status === "active" ? "bg-green-500/15 text-green-400 border border-green-500/25" : "bg-yellow-500/15 text-yellow-400 border border-yellow-500/25"}`}
+                    >
+                      {c.status === "active" ? "🟢 Active" : "⏸ Paused"}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setClientCampaigns((prev) =>
+                        prev.map((x) =>
+                          x.id === c.id
+                            ? {
+                                ...x,
+                                status:
+                                  x.status === "active" ? "paused" : "active",
+                              }
+                            : x,
+                        ),
+                      )
+                    }
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{
+                      background:
+                        c.status === "active"
+                          ? "rgba(239,68,68,0.15)"
+                          : "rgba(34,197,94,0.15)",
+                    }}
+                  >
+                    {c.status === "active" ? (
+                      <Pause size={13} className="text-red-400" />
+                    ) : (
+                      <Play size={13} className="text-green-400" />
+                    )}
+                  </button>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    {
+                      label: "Ad Budget",
+                      value: `₹${(c.budget / 1000).toFixed(0)}K`,
+                      color: "text-blue-400",
+                    },
+                    {
+                      label: "Monthly Charge",
+                      value: `₹${(c.charge / 1000).toFixed(0)}K`,
+                      color: "text-green-400",
+                    },
+                    {
+                      label: "Client Revenue",
+                      value:
+                        c.revenue > 0
+                          ? `₹${(c.revenue / 1000).toFixed(0)}K`
+                          : "–",
+                      color: "text-yellow-400",
+                    },
+                  ].map((s) => (
+                    <div
+                      key={s.label}
+                      className="text-center p-2 rounded-xl"
+                      style={{ background: "rgba(255,255,255,0.04)" }}
+                    >
+                      <p className={`text-[14px] font-bold ${s.color}`}>
+                        {s.value}
+                      </p>
+                      <p className="text-[9px] text-komo-text-muted">
+                        {s.label}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Pricing Guide */}
+          <div
+            className="rounded-2xl p-4"
+            style={{
+              background: "rgba(168,85,247,0.08)",
+              border: "1px solid rgba(168,85,247,0.2)",
+            }}
+          >
+            <p className="text-[12px] font-semibold text-purple-300 mb-3 flex items-center gap-1.5">
+              <Sparkles size={12} /> Client Pricing Guide
+            </p>
+            {[
+              {
+                tier: "Starter",
+                price: "₹5,000/mo",
+                budget: "₹2,000–₹5,000 ad spend",
+              },
+              {
+                tier: "Standard",
+                price: "₹15,000/mo",
+                budget: "₹10,000–₹20,000 ad spend",
+              },
+              {
+                tier: "Premium",
+                price: "₹50,000/mo",
+                budget: "₹30,000+ ad spend",
+              },
+            ].map((tier) => (
+              <div
+                key={tier.tier}
+                className="flex items-center justify-between py-2 border-b border-white/5 last:border-0"
+              >
+                <div>
+                  <p className="text-[12px] font-semibold text-foreground">
+                    {tier.tier}
+                  </p>
+                  <p className="text-[10px] text-komo-text-muted">
+                    {tier.budget}
+                  </p>
+                </div>
+                <span className="text-[12px] font-bold text-green-400">
+                  {tier.price}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -608,7 +1325,6 @@ function InsightsTab() {
     { label: "Engagement Rate", value: "6.2%", change: "+2.1%", icon: "❤️" },
     { label: "Link Clicks", value: "3,210", change: "+11%", icon: "🔗" },
   ];
-
   const topContent = [
     {
       title: "Dance Tutorial Reel",
@@ -629,7 +1345,6 @@ function InsightsTab() {
       type: "Story",
     },
   ];
-
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-3">
@@ -658,7 +1373,6 @@ function InsightsTab() {
           </motion.div>
         ))}
       </div>
-
       <div
         className="komo-surface rounded-2xl p-4"
         style={{ border: "1px solid rgba(255,255,255,0.08)" }}
@@ -705,7 +1419,6 @@ function InsightsTab() {
           ))}
         </div>
       </div>
-
       <div
         className="rounded-2xl p-4"
         style={{
@@ -756,10 +1469,8 @@ function InsightsTab() {
 export default function BusinessAccount() {
   const { navigate } = useApp();
   const [activeTab, setActiveTab] = useState<Tab>("Earning");
-
   return (
     <div className="max-w-2xl mx-auto px-4 py-4 pb-12">
-      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -783,8 +1494,6 @@ export default function BusinessAccount() {
           </p>
         </div>
       </motion.div>
-
-      {/* Tabs */}
       <div className="flex gap-2 mb-5 overflow-x-auto pb-1">
         {TABS.map((tab) => (
           <button
@@ -806,8 +1515,6 @@ export default function BusinessAccount() {
           </button>
         ))}
       </div>
-
-      {/* Tab Content */}
       {activeTab === "Earning" && <EarningTab />}
       {activeTab === "Ads Manager" && <AdsManagerTab />}
       {activeTab === "Insights" && <InsightsTab />}
