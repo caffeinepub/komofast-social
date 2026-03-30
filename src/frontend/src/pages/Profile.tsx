@@ -252,6 +252,12 @@ export default function Profile() {
                   <Zap size={10} className="mr-0.5" /> CREATOR
                 </Badge>
               )}
+              <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-[10px]">
+                ⭐ Premium
+              </Badge>
+              <Badge className="bg-purple-500/20 text-purple-400 border-purple-500\/30 text-[10px]">
+                👥 Super Fan
+              </Badge>
             </div>
             <p className="text-[13px] text-komo-text-muted">
               @{profile.username}

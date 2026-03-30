@@ -48,6 +48,12 @@ const CreatorPrivacy = lazy(() => import("./pages/CreatorPrivacy"));
 const CountryDetect = lazy(() => import("./pages/CountryDetect"));
 const ReelEditor = lazy(() => import("./pages/ReelEditor"));
 const BusinessAccount = lazy(() => import("./pages/BusinessAccount"));
+const PremiumSubscription = lazy(() => import("./pages/PremiumSubscription"));
+const Memberships = lazy(() => import("./pages/Memberships"));
+const MerchStore = lazy(() => import("./pages/MerchStore"));
+const AdsTargeting = lazy(() => import("./pages/AdsTargeting"));
+const MonetizationHub = lazy(() => import("./pages/MonetizationHub"));
+const AIMusicStudio = lazy(() => import("./pages/AIMusicStudio"));
 
 function PageLoader() {
   return (
@@ -151,6 +157,12 @@ function Router() {
     if (currentPath === "/creator-privacy") return <CreatorPrivacy />;
     if (currentPath === "/country-detect") return <CountryDetect />;
     if (currentPath === "/reel-editor") return <ReelEditor />;
+    if (currentPath === "/premium") return <PremiumSubscription />;
+    if (currentPath === "/memberships") return <Memberships />;
+    if (currentPath === "/merch") return <MerchStore />;
+    if (currentPath === "/ads-targeting") return <AdsTargeting />;
+    if (currentPath === "/monetization") return <MonetizationHub />;
+    if (currentPath === "/ai-music-studio") return <AIMusicStudio />;
     return <Home />;
   };
 

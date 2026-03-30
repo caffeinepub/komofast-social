@@ -340,6 +340,18 @@ export default function WalletPage() {
               amount: 450,
               color: "text-pink-400",
             },
+            {
+              label: "Premium Subscription",
+              amount: 990,
+              color: "text-yellow-400",
+            },
+            {
+              label: "Membership Earnings",
+              amount: 645,
+              color: "text-orange-400",
+            },
+            { label: "Super Chat Earned", amount: 420, color: "text-red-400" },
+            { label: "Merch Commission", amount: 390, color: "text-cyan-400" },
           ].map((item) => (
             <div key={item.label} className="flex items-center justify-between">
               <span className="text-gray-400 text-sm">{item.label}</span>

@@ -1149,6 +1149,208 @@ export default function Admin() {
                 </div>
               </div>
 
+              {/* Subscription Management */}
+              <div className="komo-surface rounded-2xl komo-card-shadow p-5">
+                <h3 className="text-[14px] font-semibold text-foreground mb-3">
+                  ⭐ Subscription Management
+                </h3>
+                <div className="grid grid-cols-3 gap-3 mb-3">
+                  {[
+                    { label: "Total Subscribers", value: "4,280" },
+                    { label: "Monthly Revenue", value: "₹4,23,720" },
+                    { label: "Churn Rate", value: "2.4%" },
+                  ].map((s) => (
+                    <div
+                      key={s.label}
+                      className="bg-white/5 rounded-xl p-3 text-center"
+                    >
+                      <p className="text-[16px] font-bold komo-gradient-text">
+                        {s.value}
+                      </p>
+                      <p className="text-[10px] text-komo-text-muted mt-0.5">
+                        {s.label}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <div className="space-y-2">
+                  {[
+                    {
+                      plan: "KomoPro ₹999/yr",
+                      count: 1240,
+                      revenue: "₹12,37,560",
+                    },
+                    {
+                      plan: "KomoPremium ₹99/mo",
+                      count: 3040,
+                      revenue: "₹3,00,960",
+                    },
+                  ].map((p) => (
+                    <div
+                      key={p.plan}
+                      className="flex items-center justify-between bg-white/5 rounded-xl p-3"
+                    >
+                      <span className="text-[12px] text-komo-text-secondary">
+                        {p.plan}
+                      </span>
+                      <span className="text-[12px] text-komo-text-muted">
+                        {p.count} users
+                      </span>
+                      <span className="text-[12px] font-semibold komo-gradient-text">
+                        {p.revenue}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Membership Management */}
+              <div className="komo-surface rounded-2xl komo-card-shadow p-5">
+                <h3 className="text-[14px] font-semibold text-foreground mb-3">
+                  👥 Membership Management
+                </h3>
+                <div className="grid grid-cols-3 gap-3 mb-3">
+                  {[
+                    { label: "Total Members", value: "1,962" },
+                    { label: "Monthly Revenue", value: "₹6,450" },
+                    { label: "Active Creators", value: "48" },
+                  ].map((s) => (
+                    <div
+                      key={s.label}
+                      className="bg-white/5 rounded-xl p-3 text-center"
+                    >
+                      <p className="text-[16px] font-bold komo-gradient-text">
+                        {s.value}
+                      </p>
+                      <p className="text-[10px] text-komo-text-muted mt-0.5">
+                        {s.label}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <div className="space-y-2">
+                  {[
+                    {
+                      tier: "Super Fan ₹199/mo",
+                      count: 142,
+                      payout: "₹14,158",
+                    },
+                    { tier: "Supporter ₹99/mo", count: 580, payout: "₹34,220" },
+                    { tier: "Fan ₹49/mo", count: 1240, payout: "₹36,260" },
+                  ].map((t) => (
+                    <div
+                      key={t.tier}
+                      className="flex items-center justify-between bg-white/5 rounded-xl p-3"
+                    >
+                      <span className="text-[12px] text-komo-text-secondary">
+                        {t.tier}
+                      </span>
+                      <span className="text-[12px] text-komo-text-muted">
+                        {t.count} members
+                      </span>
+                      <span className="text-[12px] font-semibold text-green-400">
+                        {t.payout}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Super Chat Logs */}
+              <div className="komo-surface rounded-2xl komo-card-shadow p-5">
+                <h3 className="text-[14px] font-semibold text-foreground mb-3">
+                  💬 Super Chat Logs
+                </h3>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  {[
+                    { label: "Today Earned", value: "₹2,450" },
+                    { label: "This Month", value: "₹4,200" },
+                  ].map((s) => (
+                    <div
+                      key={s.label}
+                      className="bg-white/5 rounded-xl p-3 text-center"
+                    >
+                      <p className="text-[16px] font-bold komo-gradient-text">
+                        {s.value}
+                      </p>
+                      <p className="text-[10px] text-komo-text-muted mt-0.5">
+                        {s.label}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <div className="space-y-2">
+                  {[
+                    {
+                      user: "Ravi Kumar",
+                      amount: 1000,
+                      msg: "Amazing stream! 🔥",
+                    },
+                    {
+                      user: "Priya S",
+                      amount: 500,
+                      msg: "Love your content ❤️",
+                    },
+                    { user: "Deepak V", amount: 100, msg: "Keep it up!" },
+                  ].map((sc) => (
+                    <div
+                      key={sc.user}
+                      className="flex items-center justify-between bg-white/5 rounded-xl p-3"
+                    >
+                      <div>
+                        <p className="text-[12px] font-semibold text-foreground">
+                          {sc.user}
+                        </p>
+                        <p className="text-[11px] text-komo-text-muted">
+                          {sc.msg}
+                        </p>
+                      </div>
+                      <span className="text-[14px] font-bold text-yellow-400">
+                        ₹{sc.amount}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Merch Orders */}
+              <div className="komo-surface rounded-2xl komo-card-shadow p-5">
+                <h3 className="text-[14px] font-semibold text-foreground mb-3">
+                  🛍️ Merch Orders
+                </h3>
+                <div className="grid grid-cols-3 gap-3 mb-3">
+                  {[
+                    {
+                      label: "Pending Orders",
+                      value: "24",
+                      color: "text-yellow-400",
+                    },
+                    {
+                      label: "Fulfilled",
+                      value: "186",
+                      color: "text-green-400",
+                    },
+                    {
+                      label: "Total Revenue",
+                      value: "₹3,900",
+                      color: "komo-gradient-text",
+                    },
+                  ].map((s) => (
+                    <div
+                      key={s.label}
+                      className="bg-white/5 rounded-xl p-3 text-center"
+                    >
+                      <p className={`text-[16px] font-bold ${s.color}`}>
+                        {s.value}
+                      </p>
+                      <p className="text-[10px] text-komo-text-muted mt-0.5">
+                        {s.label}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Payout Approvals Queue */}
               <div className="komo-surface rounded-2xl komo-card-shadow overflow-hidden">
                 <div className="p-4 border-b border-komo-border flex items-center justify-between">

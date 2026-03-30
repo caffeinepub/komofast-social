@@ -10,25 +10,95 @@ import {
   Users,
   Video,
   VideoOff,
+  X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { useApp } from "../context/AppContext";
 
 const CATEGORIES = ["Entertainment", "Gaming", "Music", "Talk", "Cooking"];
 
-const MOCK_COMMENTS = [
-  { id: "1", user: "Ravi Kumar", msg: "🔥 Amazing stream!", time: 1 },
-  { id: "2", user: "Anjali M", msg: "Super bhai!", time: 2 },
-  { id: "3", user: "Deepak S", msg: "Love this! ❤️", time: 3 },
-  { id: "4", user: "Pooja V", msg: "Watching from Mumbai!", time: 4 },
-  { id: "5", user: "Suresh P", msg: "👏👏👏", time: 5 },
-  { id: "6", user: "Meena R", msg: "Best creator on KomoFast!", time: 6 },
-  { id: "7", user: "Kiran T", msg: "First time watching 🙌", time: 7 },
-  { id: "8", user: "Vikram N", msg: "Pls do a Q&A!", time: 8 },
+const MOCK_COMMENTS: ChatMsg[] = [
+  {
+    id: "1",
+    user: "Ravi Kumar",
+    msg: "🔥 Amazing stream!",
+    time: 1,
+    type: "chat",
+  },
+  { id: "2", user: "Anjali M", msg: "Super bhai!", time: 2, type: "chat" },
+  { id: "3", user: "Deepak S", msg: "Love this! ❤️", time: 3, type: "chat" },
+  {
+    id: "4",
+    user: "Pooja V",
+    msg: "Watching from Mumbai!",
+    time: 4,
+    type: "chat",
+  },
+  { id: "5", user: "Suresh P", msg: "👏👏👏", time: 5, type: "chat" },
+  {
+    id: "6",
+    user: "Meera R",
+    msg: "Best creator on KomoFast!",
+    time: 6,
+    type: "chat",
+  },
+  {
+    id: "7",
+    user: "Kiran T",
+    msg: "First time watching 🙌",
+    time: 7,
+    type: "chat",
+  },
+  { id: "8", user: "Vikram N", msg: "Pls do a Q&A!", time: 8, type: "chat" },
+];
+
+const SUPER_CHAT_TIERS = [
+  {
+    amount: 10,
+    color: "#3b82f6",
+    bg: "rgba(59,130,246,0.25)",
+    label: "💙 Blue",
+  },
+  {
+    amount: 50,
+    color: "#22c55e",
+    bg: "rgba(34,197,94,0.25)",
+    label: "💚 Green",
+  },
+  {
+    amount: 100,
+    color: "#eab308",
+    bg: "rgba(234,179,8,0.25)",
+    label: "🖤 Yellow",
+  },
+  {
+    amount: 500,
+    color: "#f97316",
+    bg: "rgba(249,115,22,0.25)",
+    label: "🧡 Orange",
+  },
+  {
+    amount: 1000,
+    color: "#ef4444",
+    bg: "linear-gradient(135deg,rgba(239,68,68,0.35),rgba(234,179,8,0.35))",
+    label: "❤️‍🔥 Red",
+  },
 ];
 
 const REACTIONS = ["❤️", "🔥", "👏", "😍", "🎉"];
+
+type ChatMsg = {
+  id: string;
+  user: string;
+  msg: string;
+  time: number;
+  type: "chat" | "superchat";
+  amount?: number;
+  color?: string;
+  bg?: string;
+};
 
 export default function LiveStream() {
   const { navigate } = useApp();
@@ -39,11 +109,18 @@ export default function LiveStream() {
   const [camOn, setCamOn] = useState(true);
   const [seconds, setSeconds] = useState(0);
   const [viewers, setViewers] = useState(1200);
-  const [comments, setComments] = useState(MOCK_COMMENTS.slice(0, 3));
+  const [comments, setComments] = useState<ChatMsg[]>(
+    MOCK_COMMENTS.slice(0, 3),
+  );
   const [floatingReactions, setFloatingReactions] = useState<
     { id: string; emoji: string; x: number }[]
   >([]);
   const [chatInput, setChatInput] = useState("");
+  const [superChatOpen, setSuperChatOpen] = useState(false);
+  const [superChatAmount, setSuperChatAmount] = useState(50);
+  const [superChatMsg, setSuperChatMsg] = useState("");
+  const [pinnedSuperChat, setPinnedSuperChat] = useState<ChatMsg | null>(null);
+  const [todayEarnings, setTodayEarnings] = useState(2450);
   const commentsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -83,7 +160,7 @@ export default function LiveStream() {
   useEffect(() => {
     if (commentsRef.current)
       commentsRef.current.scrollTop = commentsRef.current.scrollHeight;
-  }); // run after every render where comments change
+  });
 
   const fmt = (s: number) =>
     `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
@@ -92,9 +169,41 @@ export default function LiveStream() {
     if (!chatInput.trim()) return;
     setComments((prev) => [
       ...prev.slice(-9),
-      { id: Date.now().toString(), user: "You", msg: chatInput, time: 0 },
+      {
+        id: Date.now().toString(),
+        user: "You",
+        msg: chatInput,
+        time: 0,
+        type: "chat",
+      },
     ]);
     setChatInput("");
+  };
+
+  const sendSuperChat = () => {
+    if (!superChatMsg.trim()) {
+      toast.error("Message डालें");
+      return;
+    }
+    const tier =
+      SUPER_CHAT_TIERS.find((t) => t.amount === superChatAmount) ||
+      SUPER_CHAT_TIERS[1];
+    const newMsg: ChatMsg = {
+      id: Date.now().toString(),
+      user: "You",
+      msg: superChatMsg,
+      time: 0,
+      type: "superchat",
+      amount: superChatAmount,
+      color: tier.color,
+      bg: tier.bg,
+    };
+    setComments((prev) => [...prev.slice(-9), newMsg]);
+    setPinnedSuperChat(newMsg);
+    setTodayEarnings((e) => e + superChatAmount);
+    setSuperChatOpen(false);
+    setSuperChatMsg("");
+    toast.success(`Super Chat ₹${superChatAmount} sent! 🎉`);
   };
 
   if (!isLive) {
@@ -166,6 +275,15 @@ export default function LiveStream() {
               </div>
             </div>
 
+            <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+              <p className="text-white/40 text-[10px] mb-1">
+                💡 Super Chat enabled — earn from fans live
+              </p>
+              <p className="text-white/60 text-xs">
+                ₹10 • ₹50 • ₹100 • ₹500 • ₹1000 tiers available
+              </p>
+            </div>
+
             <button
               type="button"
               data-ocid="live.go_live_button"
@@ -187,7 +305,7 @@ export default function LiveStream() {
       style={{ background: "#050709" }}
       data-ocid="live.broadcast.page"
     >
-      {/* Top */}
+      {/* Top bar */}
       <div className="absolute top-10 left-0 right-0 px-4 flex items-center justify-between z-20">
         <div className="flex items-center gap-2">
           <span className="px-2 py-0.5 rounded-md bg-red-600 text-white text-xs font-bold animate-pulse">
@@ -195,11 +313,22 @@ export default function LiveStream() {
           </span>
           <span className="text-white/80 text-xs">{fmt(seconds)}</span>
         </div>
-        <div className="flex items-center gap-1 bg-black/40 px-3 py-1.5 rounded-full">
-          <Users size={13} className="text-white" />
-          <span className="text-white text-xs font-semibold">
-            {viewers.toLocaleString()}
-          </span>
+        <div className="flex items-center gap-3">
+          {/* Today earnings ticker */}
+          <div
+            className="flex items-center gap-1 bg-green-600/30 border border-green-500/30 px-3 py-1.5 rounded-full"
+            data-ocid="live.earnings_ticker"
+          >
+            <span className="text-green-400 text-xs font-bold">
+              💰 ₹{todayEarnings.toLocaleString()} earned
+            </span>
+          </div>
+          <div className="flex items-center gap-1 bg-black/40 px-3 py-1.5 rounded-full">
+            <Users size={13} className="text-white" />
+            <span className="text-white text-xs font-semibold">
+              {viewers.toLocaleString()}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -235,6 +364,42 @@ export default function LiveStream() {
         </AnimatePresence>
       </div>
 
+      {/* Pinned Super Chat */}
+      <AnimatePresence>
+        {pinnedSuperChat && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute top-20 left-4 right-4 z-20 rounded-xl p-3 border flex items-center gap-2"
+            style={{
+              background: pinnedSuperChat.bg,
+              borderColor: `${pinnedSuperChat.color}60`,
+            }}
+            data-ocid="live.pinned_superchat"
+          >
+            <span className="text-white text-sm">📌</span>
+            <div className="flex-1">
+              <span
+                className="text-xs font-bold"
+                style={{ color: pinnedSuperChat.color }}
+              >
+                {pinnedSuperChat.user} • ₹{pinnedSuperChat.amount}
+              </span>
+              <p className="text-white/90 text-xs">{pinnedSuperChat.msg}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPinnedSuperChat(null)}
+              className="text-white/40"
+              data-ocid="live.pinned_superchat.close_button"
+            >
+              <X size={14} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Chat overlay */}
       <div
         ref={commentsRef}
@@ -246,9 +411,26 @@ export default function LiveStream() {
             key={c.id}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-1.5 bg-black/50 rounded-full px-3 py-1 backdrop-blur-sm"
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 backdrop-blur-sm ${
+              c.type === "superchat" ? "border" : ""
+            }`}
+            style={{
+              background: c.type === "superchat" ? c.bg : "rgba(0,0,0,0.5)",
+              borderColor: c.type === "superchat" ? `${c.color}60` : undefined,
+            }}
           >
-            <span className="text-xs font-bold" style={{ color: "#a78bfa" }}>
+            {c.type === "superchat" && (
+              <span
+                className="text-[10px] font-bold"
+                style={{ color: c.color }}
+              >
+                ₹{c.amount}
+              </span>
+            )}
+            <span
+              className="text-xs font-bold"
+              style={{ color: c.type === "superchat" ? c.color : "#a78bfa" }}
+            >
               {c.user}
             </span>
             <span className="text-white text-xs">{c.msg}</span>
@@ -266,6 +448,15 @@ export default function LiveStream() {
           placeholder="Say something..."
           className="flex-1 bg-black/40 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2 text-white text-xs placeholder:text-white/30 outline-none"
         />
+        <button
+          type="button"
+          data-ocid="live.superchat.open_modal_button"
+          onClick={() => setSuperChatOpen(true)}
+          className="w-9 h-9 rounded-full flex items-center justify-center text-sm"
+          style={{ background: "linear-gradient(135deg,#eab308,#ef4444)" }}
+        >
+          💰
+        </button>
         <button
           type="button"
           data-ocid="live.chat_send_button"
@@ -324,6 +515,116 @@ export default function LiveStream() {
           <Radio size={16} /> End Live
         </button>
       </div>
+
+      {/* Super Chat panel */}
+      <AnimatePresence>
+        {superChatOpen && (
+          <>
+            <motion.div
+              className="fixed inset-0 bg-black/60 z-40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSuperChatOpen(false)}
+            />
+            <motion.div
+              className="fixed bottom-0 left-0 right-0 z-50 bg-[#12161e] rounded-t-3xl border-t border-white/10 p-5 pb-8"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              data-ocid="live.superchat.sheet"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-white font-bold">
+                  💰 Super Chat अतर स्वामी
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setSuperChatOpen(false)}
+                  className="text-white/40"
+                  data-ocid="live.superchat.close_button"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Tier buttons */}
+              <div className="flex gap-2 mb-4 flex-wrap">
+                {SUPER_CHAT_TIERS.map((tier) => (
+                  <button
+                    type="button"
+                    key={tier.amount}
+                    data-ocid={`live.superchat_tier_${tier.amount}.button`}
+                    onClick={() => setSuperChatAmount(tier.amount)}
+                    className="px-4 py-2 rounded-xl text-xs font-bold transition-all border"
+                    style={{
+                      borderColor:
+                        superChatAmount === tier.amount
+                          ? tier.color
+                          : "rgba(255,255,255,0.1)",
+                      background:
+                        superChatAmount === tier.amount
+                          ? tier.bg
+                          : "rgba(255,255,255,0.05)",
+                      color:
+                        superChatAmount === tier.amount
+                          ? tier.color
+                          : "rgba(255,255,255,0.5)",
+                    }}
+                  >
+                    {tier.label} ₹{tier.amount}
+                  </button>
+                ))}
+              </div>
+
+              {/* Selected tier preview */}
+              <div
+                className="rounded-xl p-3 border mb-4"
+                style={{
+                  background: SUPER_CHAT_TIERS.find(
+                    (t) => t.amount === superChatAmount,
+                  )?.bg,
+                  borderColor: `${SUPER_CHAT_TIERS.find((t) => t.amount === superChatAmount)?.color ?? ""}60`,
+                }}
+              >
+                <p
+                  className="text-xs font-bold mb-0.5"
+                  style={{
+                    color: SUPER_CHAT_TIERS.find(
+                      (t) => t.amount === superChatAmount,
+                    )?.color,
+                  }}
+                >
+                  ₹{superChatAmount} Super Chat
+                </p>
+                <p className="text-white/50 text-[10px]">
+                  Your message will be pinned at the top
+                </p>
+              </div>
+
+              <input
+                data-ocid="live.superchat.input"
+                placeholder="Message डालें..."
+                value={superChatMsg}
+                onChange={(e) => setSuperChatMsg(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/30 outline-none mb-4"
+              />
+
+              <button
+                type="button"
+                data-ocid="live.superchat.submit_button"
+                onClick={sendSuperChat}
+                className="w-full py-3 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-2"
+                style={{
+                  background: `linear-gradient(135deg,${SUPER_CHAT_TIERS.find((t) => t.amount === superChatAmount)?.color || "#eab308"},#a855f7)`,
+                }}
+              >
+                Send Super Chat ₹{superChatAmount}
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
