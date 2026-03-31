@@ -1,5 +1,5 @@
 import { Toaster } from "@/components/ui/sonner";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect, useRef } from "react";
 import BottomNav from "./components/layout/BottomNav";
 import FAB from "./components/layout/FAB";
 import TopBar from "./components/layout/TopBar";
@@ -193,6 +193,40 @@ function Router() {
 }
 
 export default function App() {
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+
+  useEffect(() => {
+    const requestWakeLock = async () => {
+      try {
+        if ("wakeLock" in navigator) {
+          wakeLockRef.current = await (
+            navigator as Navigator & {
+              wakeLock: {
+                request: (type: string) => Promise<WakeLockSentinel>;
+              };
+            }
+          ).wakeLock.request("screen");
+        }
+      } catch {
+        // Wake Lock not supported or denied
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        requestWakeLock();
+      }
+    };
+
+    requestWakeLock();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      wakeLockRef.current?.release();
+    };
+  }, []);
+
   return (
     <LanguageProvider>
       <AppProvider>
