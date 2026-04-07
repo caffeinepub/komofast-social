@@ -54,6 +54,9 @@ const MerchStore = lazy(() => import("./pages/MerchStore"));
 const AdsTargeting = lazy(() => import("./pages/AdsTargeting"));
 const MonetizationHub = lazy(() => import("./pages/MonetizationHub"));
 const AIMusicStudio = lazy(() => import("./pages/AIMusicStudio"));
+const AIVoiceBot = lazy(() => import("./pages/AIVoiceBot"));
+const AICustomerSupport = lazy(() => import("./pages/AICustomerSupport"));
+const AISalesChat = lazy(() => import("./pages/AISalesChat"));
 
 function PageLoader() {
   return (
@@ -163,6 +166,9 @@ function Router() {
     if (currentPath === "/ads-targeting") return <AdsTargeting />;
     if (currentPath === "/monetization") return <MonetizationHub />;
     if (currentPath === "/ai-music-studio") return <AIMusicStudio />;
+    if (currentPath === "/ai-voice-bot") return <AIVoiceBot />;
+    if (currentPath === "/ai-support-chat") return <AICustomerSupport />;
+    if (currentPath === "/ai-sales-chat") return <AISalesChat />;
     return <Home />;
   };
 
