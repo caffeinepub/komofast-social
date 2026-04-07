@@ -1091,6 +1091,18 @@ export default function Profile() {
               emoji: "📋",
               ocid: "profile.community_guidelines.link",
             },
+            {
+              label: "Content Rules",
+              path: "/content-rules",
+              emoji: "📖",
+              ocid: "profile.content_rules.link",
+            },
+            {
+              label: "File a Complaint",
+              path: "/complaints",
+              emoji: "📝",
+              ocid: "profile.complaints.link",
+            },
           ].map((item, idx, arr) => (
             <button
               key={item.path}
